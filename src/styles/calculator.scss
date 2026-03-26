@@ -1663,14 +1663,15 @@
 
   .dsc-pay-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr;           // 1×4 below 600px
+
+    @media (min-width: 600px) {
+      grid-template-columns: 1fr 1fr;     // 2×2 from 600px
+    }
+
     gap: 12px;
     margin-bottom: 16px;
     align-items: stretch;
-
-    @media (min-width: 400px) {
-      grid-template-columns: 1fr 1fr;
-    }
   }
 
   .dsc-pay-card-outer {
