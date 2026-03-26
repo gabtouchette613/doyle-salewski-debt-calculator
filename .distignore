@@ -1,0 +1,17 @@
+.git
+.gitignore
+.distignore
+node_modules
+src
+*.map
+package.json
+package-lock.json
+webpack.config.js
+.editorconfig
+.eslintrc
+*.md
+tests
+.DS_Store
+Thumbs.db
+deploy.sh
+prototypes

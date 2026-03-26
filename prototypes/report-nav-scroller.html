@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Report Navigation — Doyle Salewski</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #f9fafb; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 16px; }
+.shell { max-width: 500px; width: 100%; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background: #fff; }
+
+/* Rail */
+.rail { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: stretch; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.rail::-webkit-scrollbar { display: none; }
+.tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 12px 16px 10px; cursor: pointer; border-bottom: 2.5px solid transparent; white-space: nowrap; transition: all 0.18s; flex-shrink: 0; min-width: 88px; }
+.tab:hover .tab-icon { background: #f3f4f6; }
+.tab.active { border-bottom-color: #1161eb; }
+.tab.active-green { border-bottom-color: #16a34a; }
+.tab-icon { width: 30px; height: 30px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; transition: all 0.18s; }
+.tab.active .tab-icon { background: #eff6ff; }
+.tab.active-green .tab-icon { background: #f0fdf4; }
+.tab-icon svg { width: 14px; height: 14px; stroke: #9ca3af; transition: stroke 0.18s; }
+.tab.active .tab-icon svg { stroke: #1161eb; }
+.tab.active-green .tab-icon svg { stroke: #16a34a; }
+.tab-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; transition: color 0.18s; line-height: 1; }
+.tab.active .tab-lbl { color: #1161eb; }
+.tab.active-green .tab-lbl { color: #16a34a; }
+
+/* Dots */
+.dots { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 0 6px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: #d1d5db; cursor: pointer; transition: all 0.2s; }
+.dot.active { width: 16px; border-radius: 99px; background: #1161eb; }
+.dot.active-green { width: 16px; border-radius: 99px; background: #16a34a; }
+
+/* Sections */
+.sec { padding: 16px; border-bottom: 1px solid #f3f4f6; scroll-margin-top: 100px; }
+.sec:last-child { border-bottom: none; }
+.sec-inner { border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px 20px 18px; display: flex; gap: 14px; align-items: flex-start; transition: border-color 0.2s; cursor: pointer; }
+.sec-inner:hover { border-color: #d1d5db; }
+.sec-icon-wrap { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sec-body { flex: 1; min-width: 0; }
+.sec-eyebrow { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; display: inline-block; padding: 2px 8px; border-radius: 99px; }
+.sec-title { font-size: 14px; font-weight: 800; color: #111827; letter-spacing: -0.2px; margin-bottom: 4px; line-height: 1.3; }
+.sec-sub { font-size: 12px; color: #9ca3af; line-height: 1.55; }
+.sec-arrow { color: #d1d5db; font-size: 18px; align-self: center; flex-shrink: 0; margin-left: 4px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Tab rail -->
+  <div class="rail" id="rail">
+    <div class="tab active" id="t0" onclick="go(0,this)">
+      <div class="tab-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 6h6M5 9h4"/>
+        </svg>
+      </div>
+      <span class="tab-lbl">Report</span>
+    </div>
+    <div class="tab" id="t1" onclick="go(1,this)">
+      <div class="tab-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 13h12M2 13V4M5 10l2.5-3 2.5 2 3-4"/>
+        </svg>
+      </div>
+      <span class="tab-lbl">Timeline</span>
+    </div>
+    <div class="tab" id="t2" onclick="go(2,this)">
+      <div class="tab-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="9" width="3" height="5" rx="1"/><rect x="6.5" y="6" width="3" height="8" rx="1"/><rect x="11" y="3" width="3" height="11" rx="1"/>
+        </svg>
+      </div>
+      <span class="tab-lbl">Payments</span>
+    </div>
+    <div class="tab" id="t3" onclick="go(3,this)">
+      <div class="tab-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M3 5h10M3 11h6"/>
+        </svg>
+      </div>
+      <span class="tab-lbl">Options</span>
+    </div>
+    <div class="tab" id="t4" onclick="go(4,this)">
+      <div class="tab-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 2a6 6 0 100 12A6 6 0 008 2z"/><path d="M6 8l1.5 1.5L10 6"/>
+        </svg>
+      </div>
+      <span class="tab-lbl">Next step</span>
+    </div>
+  </div>
+
+  <!-- Progress dots -->
+  <div class="dots" id="dots">
+    <div class="dot active"  onclick="go(0,document.getElementById('t0'))"></div>
+    <div class="dot"         onclick="go(1,document.getElementById('t1'))"></div>
+    <div class="dot"         onclick="go(2,document.getElementById('t2'))"></div>
+    <div class="dot"         onclick="go(3,document.getElementById('t3'))"></div>
+    <div class="dot"         onclick="go(4,document.getElementById('t4'))"></div>
+  </div>
+
+  <!-- Section cards -->
+  <div id="sections">
+    <div class="sec" id="s0">
+      <div class="sec-inner">
+        <div class="sec-icon-wrap" style="background:#eff6ff">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#1161eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 6h6M5 9h4"/>
+          </svg>
+        </div>
+        <div class="sec-body">
+          <span class="sec-eyebrow" style="background:#eff6ff;color:#1161eb;border:1px solid #bfdbfe">Your situation</span>
+          <div class="sec-title">Debt Assessment Report</div>
+          <div class="sec-sub">Your financial snapshot — debt, monthly interest, income, and what it all means right now.</div>
+        </div>
+        <span class="sec-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="sec" id="s1">
+      <div class="sec-inner">
+        <div class="sec-icon-wrap" style="background:#eff6ff">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#1161eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 13h12M2 13V4M5 10l2.5-3 2.5 2 3-4"/>
+          </svg>
+        </div>
+        <div class="sec-body">
+          <span class="sec-eyebrow" style="background:#eff6ff;color:#1161eb;border:1px solid #bfdbfe">Chart 1</span>
+          <div class="sec-title">Your debt-free timeline</div>
+          <div class="sec-sub">When does each option end? See the difference between 5 years and 27 years — visually.</div>
+        </div>
+        <span class="sec-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="sec" id="s2">
+      <div class="sec-inner">
+        <div class="sec-icon-wrap" style="background:#eff6ff">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#1161eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="9" width="3" height="5" rx="1"/><rect x="6.5" y="6" width="3" height="8" rx="1"/><rect x="11" y="3" width="3" height="11" rx="1"/>
+          </svg>
+        </div>
+        <div class="sec-body">
+          <span class="sec-eyebrow" style="background:#eff6ff;color:#1161eb;border:1px solid #bfdbfe">Chart 2</span>
+          <div class="sec-title">Monthly payments</div>
+          <div class="sec-sub">What comes out of your pocket each month — and which options fit within your $1,600 surplus.</div>
+        </div>
+        <span class="sec-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="sec" id="s3">
+      <div class="sec-inner">
+        <div class="sec-icon-wrap" style="background:#eff6ff">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#1161eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 8h10M3 5h10M3 11h6"/>
+          </svg>
+        </div>
+        <div class="sec-body">
+          <span class="sec-eyebrow" style="background:#eff6ff;color:#1161eb;border:1px solid #bfdbfe">All options</span>
+          <div class="sec-title">Your options compared</div>
+          <div class="sec-sub">Every available path — total cost, duration, monthly payment, and credit impact side by side.</div>
+        </div>
+        <span class="sec-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="sec" id="s4">
+      <div class="sec-inner" style="border-color:#bbf7d0;background:#fafffe">
+        <div class="sec-icon-wrap" style="background:#dcfce7">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2a6 6 0 100 12A6 6 0 008 2z"/><path d="M6 8l1.5 1.5L10 6"/>
+          </svg>
+        </div>
+        <div class="sec-body">
+          <span class="sec-eyebrow" style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0">Free consultation</span>
+          <div class="sec-title">Talk to a licensed trustee</div>
+          <div class="sec-sub">Free, confidential, no obligation. A trustee reviews your report and answers your questions personally.</div>
+        </div>
+        <span class="sec-arrow" style="color:#bbf7d0">›</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let cur = 0;
+
+function go(idx, btn) {
+  cur = idx;
+  const isGreen = idx === 4;
+
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.remove('active', 'active-green');
+    if (i === idx) t.classList.add(isGreen ? 'active-green' : 'active');
+  });
+
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.remove('active', 'active-green');
+    d.style.background = '#d1d5db';
+    if (i === idx) {
+      d.classList.add(isGreen ? 'active-green' : 'active');
+      if (!isGreen) d.style.background = '';
+    }
+  });
+
+  document.getElementById('s' + idx)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  btn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = parseInt(e.target.id.slice(1));
+      if (idx !== cur) go(idx, document.getElementById('t' + idx));
+    }
+  });
+}, { threshold: 0.6 });
+
+document.querySelectorAll('.sec').forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

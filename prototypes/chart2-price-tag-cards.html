@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monthly Payment Cards — Doyle Salewski</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui,-apple-system,sans-serif; background: #f9fafb; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 16px; }
+.card-wrap { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 32px 36px; max-width: 780px; width: 100%; }
+.card-wrap-title { font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 3px; }
+.card-wrap-sub { font-size: 12px; color: #6b7280; margin-bottom: 14px; }
+.pt-surplus { display: flex; align-items: center; gap: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 11px 14px; margin-bottom: 16px; font-size: 12px; color: #166534; line-height: 1.5; }
+.pt-cards { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 16px; }
+.pt-card { border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 16px 12px; position: relative; cursor: default; transition: transform 0.15s ease, box-shadow 0.15s ease; background: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.pt-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+.pt-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+.pt-card-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; margin-top: 4px; }
+.pt-amount { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1; margin-bottom: 2px; }
+.pt-per { font-size: 11px; font-weight: 500; margin-bottom: 12px; }
+.pt-divider { width: 100%; height: 1px; background: #f3f4f6; margin-bottom: 10px; }
+.pt-stat { font-size: 11px; color: #6b7280; margin-bottom: 4px; line-height: 1.4; }
+.pt-stat strong { color: #374151; font-weight: 700; }
+.pt-fit { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px; margin-top: 6px; }
+.pt-insight { display: flex; align-items: flex-start; gap: 10px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 11px 14px; font-size: 12px; color: #1e40af; line-height: 1.6; }
+@media (max-width: 600px) {
+  .pt-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pt-card:last-child { grid-column: 1 / -1; }
+  .card-wrap { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+<div class="card-wrap">
+  <div class="card-wrap-title">What comes out of your pocket each month</div>
+  <div class="card-wrap-sub">Sorted lowest to highest. Your available surplus is <strong style="color:#16a34a">$1,600/mo</strong>.</div>
+
+  <div class="pt-surplus">
+    <div style="width:10px;height:10px;border-radius:50%;background:#16a34a;flex-shrink:0"></div>
+    <span>After your essential expenses, you have <strong>$1,600/mo available</strong> for debt repayment. Options below this amount fit comfortably within your budget.</span>
+  </div>
+
+  <div class="pt-cards" id="pt-cards"></div>
+
+  <div class="pt-insight">
+    <span style="font-size:14px;flex-shrink:0">★</span>
+    <span id="pt-insight"></span>
+  </div>
+</div>
+
+<script>
+const SURPLUS = 1600;
+const INCOME  = 3800;
+const fmt = new Intl.NumberFormat('en-CA', { style:'currency', currency:'CAD', maximumFractionDigits:0 });
+
+const OPTS = [
+  { label:'Consumer Proposal',   short:'Proposal',      color:'#1161eb', months:60,  payment:225,  total:13500,  recommended:true  },
+  { label:'Personal Bankruptcy', short:'Bankruptcy',    color:'#7c3aed', months:9,   payment:422,  total:3800,   recommended:false },
+  { label:'Debt Mgmt Plan',      short:'Debt Mgmt',     color:'#d97706', months:60,  payment:791,  total:47475,  recommended:false },
+  { label:'Consolidation Loan',  short:'Consolidation', color:'#0891b2', months:60,  payment:938,  total:56280,  recommended:false },
+  { label:'Do Nothing',          short:'Do Nothing',    color:'#dc2626', months:324, payment:1125, total:128400, recommended:false },
+].sort((a,b) => a.payment - b.payment);
+
+const container = document.getElementById('pt-cards');
+
+OPTS.forEach((o, i) => {
+  const fits      = o.payment <= SURPLUS;
+  const durTxt    = o.months < 12
+    ? `${o.months} months`
+    : `${Math.floor(o.months/12)} ${Math.floor(o.months/12) === 1 ? 'year' : 'years'}`;
+  const pctIncome = Math.round((o.payment / INCOME) * 100);
+
+  const card = document.createElement('div');
+  card.className = 'pt-card';
+  card.style.cssText = `
+    border-color: ${o.recommended ? o.color : fits ? '#e5e7eb' : '#fee2e2'};
+    background: ${o.recommended ? '#eff6ff' : '#fff'};
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.4s ease ${i * 100}ms, transform 0.4s ease ${i * 100}ms, box-shadow 0.15s ease;
+  `;
+
+  card.innerHTML = `
+    ${o.recommended ? `<div class="pt-badge" style="background:${o.color};color:#fff">Best option</div>` : ''}
+    <div class="pt-card-name" style="color:${o.color}">${o.short}</div>
+    <div class="pt-amount" style="color:${o.color}">${fmt.format(o.payment)}</div>
+    <div class="pt-per" style="color:${o.color}">per month</div>
+    <div class="pt-divider"></div>
+    <div class="pt-stat">Done in <strong>${durTxt}</strong></div>
+    <div class="pt-stat">Total paid <strong>${fmt.format(o.total)}</strong></div>
+    <div class="pt-stat">${pctIncome}% of income</div>
+    <div class="pt-fit" style="background:${fits ? '#dcfce7' : '#fef2f2'};color:${fits ? '#15803d' : '#dc2626'}">
+      ${fits ? '✓ Within budget' : '✗ Over surplus'}
+    </div>
+  `;
+
+  container.appendChild(card);
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, 100 + i * 100);
+  });
+});
+
+const proposal   = OPTS.find(o => o.recommended);
+const affordable = OPTS.filter(o => o.payment <= SURPLUS);
+document.getElementById('pt-insight').innerHTML =
+  `<strong>${affordable.length} of ${OPTS.length} options</strong> fit within your ${fmt.format(SURPLUS)}/mo surplus. ` +
+  `The Consumer Proposal at <strong>${fmt.format(proposal.payment)}/mo</strong> leaves you <strong>${fmt.format(SURPLUS - proposal.payment)}/mo to spare</strong> — ` +
+  `the most breathing room of any option that resolves your debt.`;
+</script>
+</body>
+</html>

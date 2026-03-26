@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debt-Free Timeline — Layout E — Doyle Salewski</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #f9fafb; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 16px; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px 32px; max-width: 720px; width: 100%; }
+.meta { font-size: 13px; color: #6b7280; margin-bottom: 20px; }
+.meta strong { color: #111827; }
+.toggle-row { display: flex; align-items: center; gap: 6px; margin-bottom: 32px; flex-wrap: wrap; }
+.toggle-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin-right: 2px; flex-shrink: 0; }
+.tog { padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 99px; border: 1.5px solid #d1d5db; background: #f3f4f6; color: #374151; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.tog:hover { border-color: #1161eb; color: #1161eb; background: #eff6ff; }
+.tl-outer { padding: 0 12px; margin-bottom: 24px; }
+.tl-above-row { position: relative; height: 28px; margin-bottom: 6px; }
+.tl-badge-wrap { position: absolute; transform: translateX(-50%); transition: left 0.55s cubic-bezier(0.4, 0, 0.2, 1); bottom: 0; }
+.tl-badge { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; color: #fff; white-space: nowrap; }
+.tl-track-row { position: relative; height: 20px; display: flex; align-items: center; }
+.tl-track { position: relative; width: 100%; height: 5px; background: #f3f4f6; border-radius: 99px; }
+.tl-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 99px; transition: width 0.55s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.4; }
+.tl-dot { position: absolute; top: 50%; border-radius: 50%; border: 3px solid #fff; transform: translate(-50%, -50%); transition: left 0.55s cubic-bezier(0.4, 0, 0.2, 1); }
+.dot-today { width: 12px; height: 12px; background: #374151; box-shadow: 0 0 0 2px #374151; left: 0; }
+.dot-opt { width: 18px; height: 18px; }
+.dot-nothing { width: 18px; height: 18px; background: #dc2626; box-shadow: 0 0 0 2.5px #dc2626; left: 100%; }
+.tl-labels-row { position: relative; height: 72px; margin-top: 8px; }
+.tl-node { position: absolute; transform: translateX(-50%); top: 0; text-align: center; transition: left 0.55s cubic-bezier(0.4, 0, 0.2, 1); }
+.node-lbl { font-size: 11px; font-weight: 700; line-height: 1; margin-bottom: 3px; }
+.node-yr { font-size: 26px; font-weight: 800; letter-spacing: -0.8px; line-height: 1; margin-bottom: 3px; }
+.node-sub { font-size: 11px; line-height: 1.4; white-space: nowrap; }
+.node-nothing { position: absolute; right: 0; transform: translateX(50%); top: 0; text-align: center; }
+.node-today { position: absolute; left: 0; transform: translateX(-50%); top: 0; text-align: center; }
+.info-box { display: flex; align-items: flex-start; gap: 10px; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.65; transition: all 0.3s ease; }
+@media (max-width: 520px) {
+  .card { padding: 20px 18px; }
+  .node-sub { font-size: 10px; }
+  .node-yr { font-size: 20px; }
+  .toggle-row { gap: 5px; }
+  .tog { padding: 5px 11px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="meta">Based on <strong>$45,000</strong> in unsecured debt &middot; <strong>$3,800/mo</strong> income &middot; Ontario</div>
+
+  <div class="toggle-row">
+    <span class="toggle-label">Compare</span>
+    <button class="tog" id="t-proposal"   onclick="setOpt('proposal',this)">Consumer Proposal</button>
+    <button class="tog" id="t-bankruptcy" onclick="setOpt('bankruptcy',this)">Bankruptcy</button>
+    <button class="tog" id="t-dmp"        onclick="setOpt('dmp',this)">Debt Mgmt Plan</button>
+    <button class="tog" id="t-cons"       onclick="setOpt('consolidation',this)">Consolidation</button>
+  </div>
+
+  <div class="tl-outer">
+    <div class="tl-above-row">
+      <div class="tl-badge-wrap" id="badge-wrap">
+        <span class="tl-badge" id="opt-badge">Consumer Proposal</span>
+      </div>
+    </div>
+    <div class="tl-track-row">
+      <div class="tl-track">
+        <div class="tl-fill" id="tl-fill"></div>
+        <div class="tl-dot dot-today"></div>
+        <div class="tl-dot dot-opt" id="dot-opt" style="left:0"></div>
+        <div class="tl-dot dot-nothing"></div>
+      </div>
+    </div>
+    <div class="tl-labels-row">
+      <div class="node-today">
+        <div class="node-lbl" style="color:#374151">Today</div>
+        <div class="node-yr" style="color:#374151;font-size:18px">2026</div>
+      </div>
+      <div class="tl-node" id="node-opt" style="left:0">
+        <div class="node-lbl" id="opt-status" style="color:#1161eb">Debt-free</div>
+        <div class="node-yr" id="opt-yr" style="color:#1161eb">2031</div>
+        <div class="node-sub" id="opt-sub" style="color:#1161eb">$225/mo &middot; $13,500 total</div>
+      </div>
+      <div class="node-nothing">
+        <div class="node-lbl" style="color:#dc2626">Still paying</div>
+        <div class="node-yr" style="color:#dc2626">2053</div>
+        <div class="node-sub" style="color:#dc2626">$1,125/mo &middot; $128,400 total</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box" id="info-box">
+    <span style="font-size:15px;flex-shrink:0;margin-top:1px">→</span>
+    <span id="info-text"></span>
+  </div>
+</div>
+
+<script>
+const NOW = 2026;
+const NOTHING_MO = 324;
+const NOTHING_TOTAL = 128400;
+
+const OPTS = {
+  proposal:     { label:'Consumer Proposal',   color:'#1161eb', months:60,  total:13500,  payment:225  },
+  bankruptcy:   { label:'Personal Bankruptcy', color:'#7c3aed', months:9,   total:3800,   payment:422  },
+  dmp:          { label:'Debt Mgmt Plan',       color:'#d97706', months:60,  total:47475,  payment:791  },
+  consolidation:{ label:'Consolidation Loan',  color:'#0891b2', months:60,  total:56280,  payment:938  },
+};
+
+const fmt = n => new Intl.NumberFormat('en-CA', { style:'currency', currency:'CAD', maximumFractionDigits:0 }).format(n);
+
+function setOpt(id, btn) {
+  const o = OPTS[id];
+  const pct = (o.months / NOTHING_MO * 100).toFixed(2);
+  const endYr = NOW + Math.ceil(o.months / 12);
+  const savedAmt = NOTHING_TOTAL - o.total;
+  const savedYrs = Math.round((NOTHING_MO - o.months) / 12);
+  const durTxt = o.months < 12
+    ? `${o.months} months`
+    : `${Math.floor(o.months/12)} year${Math.floor(o.months/12) > 1 ? 's' : ''}`;
+
+  // Reset all buttons
+  document.querySelectorAll('.tog').forEach(b => {
+    b.style.background = '#f3f4f6';
+    b.style.borderColor = '#d1d5db';
+    b.style.color = '#374151';
+  });
+
+  // Active button
+  btn.style.background = o.color;
+  btn.style.borderColor = o.color;
+  btn.style.color = '#fff';
+
+  // Track fill + dot
+  document.getElementById('tl-fill').style.width = pct + '%';
+  document.getElementById('tl-fill').style.background = o.color;
+  document.getElementById('dot-opt').style.left = pct + '%';
+  document.getElementById('dot-opt').style.background = o.color;
+  document.getElementById('dot-opt').style.boxShadow = `0 0 0 2.5px ${o.color}`;
+
+  // Badge above track
+  document.getElementById('badge-wrap').style.left = pct + '%';
+  document.getElementById('opt-badge').textContent = o.label;
+  document.getElementById('opt-badge').style.background = o.color;
+
+  // Label node below track — clamp so it never overlaps Today
+  const clampedPct = Math.max(12, parseFloat(pct));
+  document.getElementById('node-opt').style.left = clampedPct + '%';
+  document.getElementById('opt-status').textContent = 'Debt-free';
+  document.getElementById('opt-status').style.color = o.color;
+  document.getElementById('opt-yr').textContent = endYr;
+  document.getElementById('opt-yr').style.color = o.color;
+  document.getElementById('opt-sub').textContent = `${fmt(o.payment)}/mo · ${fmt(o.total)} total`;
+  document.getElementById('opt-sub').style.color = o.color;
+
+  // Info box
+  const isBlue = id === 'proposal';
+  const ib = document.getElementById('info-box');
+  ib.style.background = isBlue ? '#eff6ff' : '#f9fafb';
+  ib.style.border = `1px solid ${isBlue ? '#bfdbfe' : '#e5e7eb'}`;
+  ib.style.color = isBlue ? '#1e40af' : '#374151';
+
+  const saved   = savedAmt > 0 ? ` and saves you <strong>${fmt(savedAmt)}</strong>` : '';
+  const earlier = savedYrs > 0 ? ` <strong>${savedYrs} years earlier</strong>` : '';
+  document.getElementById('info-text').innerHTML =
+    `<strong>${o.label}</strong> ends your debt${earlier}${saved} — <strong>$0 in interest</strong> over ${durTxt} of fixed payments.`;
+}
+
+// Initialise on load
+setOpt('proposal', document.getElementById('t-proposal'));
+</script>
+</body>
+</html>

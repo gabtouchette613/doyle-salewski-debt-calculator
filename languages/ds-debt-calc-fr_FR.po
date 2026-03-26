@@ -1,0 +1,65 @@
+# Translation of Doyle Salewski Debt Relief Calculator in French (France)
+# Copyright (C) 2026 Doyle Salewski LIT
+# This file is distributed under the same license as the plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Doyle Salewski Debt Relief Calculator 1.0.0\n"
+"Report-Msgid-Bugs-To: https://doylesalewski.ca\n"
+"POT-Creation-Date: 2026-03-01T00:00:00+00:00\n"
+"PO-Revision-Date: 2026-03-01T00:00:00+00:00\n"
+"Last-Translator: Doyle Salewski LIT <info@doylesalewski.ca>\n"
+"Language-Team: French (France) <fr@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Domain: ds-debt-calc\n"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Calculator Leads"
+msgstr "Prospects calculatrice"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Calculator Lead"
+msgstr "Prospect calculatrice"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Debt Calculator Settings"
+msgstr "Paramètres de la calculatrice de dettes"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Debt Calculator"
+msgstr "Calculatrice de dettes"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Settings saved."
+msgstr "Paramètres sauvegardés."
+
+#: doyle-salewski-debt-calculator.php
+msgid "Firm Name"
+msgstr "Nom du cabinet"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Phone Number"
+msgstr "Numéro de téléphone"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Lead Email To"
+msgstr "Courriel de destination"
+
+#: doyle-salewski-debt-calculator.php
+msgid "CRM Webhook URL"
+msgstr "URL du webhook CRM"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Save Settings"
+msgstr "Sauvegarder"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Shortcode"
+msgstr "Code court"
+
+#: doyle-salewski-debt-calculator.php
+msgid "Place this shortcode on any page to display the calculator:"
+msgstr "Placez ce code court sur n'importe quelle page pour afficher la calculatrice :"

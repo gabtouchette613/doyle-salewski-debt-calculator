@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debt-Free Timeline — Doyle Salewski</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #f9fafb; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 16px; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 32px 36px; max-width: 680px; width: 100%; }
+.card-title { font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 4px; }
+.card-sub { font-size: 13px; color: #6b7280; margin-bottom: 28px; line-height: 1.5; }
+.tl-row { display: flex; align-items: center; gap: 0; margin-bottom: 24px; position: relative; }
+.tl-label { width: 180px; flex-shrink: 0; text-align: right; padding-right: 18px; }
+.tl-label-name { font-size: 13px; font-weight: 600; }
+.tl-label-amt { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.tl-track { flex: 1; height: 10px; background: #f3f4f6; border-radius: 99px; position: relative; overflow: visible; }
+.tl-fill { height: 100%; border-radius: 99px; width: 0%; transition: width 1s cubic-bezier(0.4,0,0.2,1); position: relative; }
+.tl-end-dot { position: absolute; right: -5px; top: 50%; transform: translateY(-50%); width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; }
+.tl-end-label { position: absolute; right: 0; top: -22px; transform: translateX(50%); font-size: 11px; font-weight: 700; color: #111827; white-space: nowrap; opacity: 0; transition: opacity 0.4s ease 0.8s; }
+.tl-fill.done .tl-end-label { opacity: 1; }
+.tl-today { position: absolute; left: 0; top: -10px; bottom: -10px; width: 2px; background: #d1d5db; border-radius: 1px; z-index: 2; }
+.tl-today-lbl { position: absolute; top: -19px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #9ca3af; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em; }
+.tl-mo { font-size: 11px; color: #6b7280; padding-left: 14px; width: 64px; flex-shrink: 0; opacity: 0; transition: opacity 0.3s ease 1s; }
+.tl-mo.show { opacity: 1; }
+.tl-axis { margin-left: 180px; display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; margin-top: 6px; }
+.tl-crossover { display: flex; align-items: flex-start; gap: 10px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 14px; margin-top: 22px; font-size: 12px; color: #78350f; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="card-title">Your debt-free timeline</div>
+  <div class="card-sub">Every path clears your debt — here's when each one finishes, and what it costs to get there.</div>
+  <div id="tl-rows"></div>
+  <div class="tl-axis" id="tl-axis"></div>
+  <div class="tl-crossover" id="tl-cx">
+    <span style="font-size:14px;flex-shrink:0">→</span>
+    <span id="tl-cx-text"></span>
+  </div>
+</div>
+
+<script>
+const NOW_YR = new Date().getFullYear();
+const OPTS = [
+  { label:'Personal Bankruptcy', color:'#7c3aed', months:9,   total:3800,   payment:422  },
+  { label:'Consumer Proposal',   color:'#1161eb', months:60,  total:13500,  payment:225  },
+  { label:'Debt Mgmt Plan',      color:'#d97706', months:60,  total:47475,  payment:791  },
+  { label:'Consolidation Loan',  color:'#0891b2', months:60,  total:56280,  payment:938  },
+  { label:'Do Nothing',          color:'#dc2626', months:324, total:128400, payment:1125 },
+];
+
+const maxMo = Math.max(...OPTS.map(o => o.months));
+const fmt = new Intl.NumberFormat('en-CA', { style:'currency', currency:'CAD', maximumFractionDigits:0 });
+
+function freeYear(months) {
+  return String(NOW_YR + Math.floor(months / 12));
+}
+
+function durLabel(months) {
+  if (months < 12) return months + ' mo';
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+  return m > 0 ? `${y}yr ${m}mo` : `${y} yr`;
+}
+
+const wrap = document.getElementById('tl-rows');
+
+OPTS.forEach((o, i) => {
+  const pct = (o.months / maxMo * 100).toFixed(1);
+  const yr = freeYear(o.months);
+  const isNothing = o.label === 'Do Nothing';
+
+  const row = document.createElement('div');
+  row.className = 'tl-row';
+  row.innerHTML = `
+    <div class="tl-label">
+      <div class="tl-label-name" style="color:${o.color}">${o.label}</div>
+      <div class="tl-label-amt">${fmt.format(o.total)} total &middot; ${fmt.format(o.payment)}/mo</div>
+    </div>
+    <div class="tl-track">
+      ${i === 0 ? `<div class="tl-today"><div class="tl-today-lbl">Today</div></div>` : ''}
+      <div class="tl-fill" id="fill-${i}" style="background:${o.color}${isNothing ? '' : '99'}">
+        <div class="tl-end-dot" style="background:${o.color};box-shadow:0 0 0 1.5px ${o.color}"></div>
+        <div class="tl-end-label" id="lbl-${i}">${yr}</div>
+      </div>
+    </div>
+    <div class="tl-mo" id="mo-${i}">${durLabel(o.months)}</div>
+  `;
+  wrap.appendChild(row);
+});
+
+const axis = document.getElementById('tl-axis');
+[0, 0.25, 0.5, 0.75, 1].forEach(s => {
+  const mo = Math.round(s * maxMo);
+  const yr = NOW_YR + Math.floor(mo / 12);
+  const span = document.createElement('span');
+  span.textContent = s === 0 ? NOW_YR : yr;
+  axis.appendChild(span);
+});
+
+const propTotal   = OPTS.find(o => o.label === 'Consumer Proposal').total;
+const nothingTotal = OPTS.find(o => o.label === 'Do Nothing').total;
+document.getElementById('tl-cx-text').innerHTML =
+  `A Consumer Proposal is done in <strong>5 years</strong> for <strong>${fmt.format(propTotal)}</strong>. ` +
+  `Minimum payments take <strong>27 years</strong> and cost <strong>${fmt.format(nothingTotal)}</strong> — ` +
+  `that's <strong>${fmt.format(nothingTotal - propTotal)} more</strong> for the privilege of waiting longer.`;
+
+function animate() {
+  OPTS.forEach((o, i) => {
+    const pct = (o.months / maxMo * 100).toFixed(1);
+    setTimeout(() => {
+      const fill = document.getElementById(`fill-${i}`);
+      const mo   = document.getElementById(`mo-${i}`);
+      fill.style.width = pct + '%';
+      fill.classList.add('done');
+      mo.classList.add('show');
+    }, 200 + i * 180);
+  });
+}
+
+setTimeout(animate, 400);
+</script>
+</body>
+</html>

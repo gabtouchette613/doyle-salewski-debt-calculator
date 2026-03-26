@@ -1,0 +1,123 @@
+# Copyright (C) 2026 Doyle Salewski LIT
+# This file is distributed under the same license as the Doyle Salewski Debt Relief Calculator plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Doyle Salewski Debt Relief Calculator 1.0.0\n"
+"Report-Msgid-Bugs-To: https://doylesalewski.ca\n"
+"POT-Creation-Date: 2026-03-01T00:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Generator: WP-CLI 2.x\n"
+"X-Domain: ds-debt-calc\n"
+
+#. Plugin Name of the plugin
+msgid "Doyle Salewski Debt Relief Calculator"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "https://doylesalewski.ca"
+msgstr ""
+
+#. Description of the plugin
+msgid "Interactive Canadian debt relief calculator with bilingual support and lead capture."
+msgstr ""
+
+#. Author of the plugin
+msgid "Doyle Salewski LIT"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Calculator Leads"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Calculator Lead"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Add New"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Add New Lead"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Edit Lead"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "View Lead"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "All Leads"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Search Leads"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "No leads found."
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "No leads found in Trash."
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Invalid nonce."
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Failed to save lead."
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "New Calculator Lead: %s"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Debt Calculator Settings"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Debt Calculator"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Settings saved."
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Firm Name"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Phone Number"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Lead Email To"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "CRM Webhook URL"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Save Settings"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Shortcode"
+msgstr ""
+
+#: doyle-salewski-debt-calculator.php
+msgid "Place this shortcode on any page to display the calculator:"
+msgstr ""

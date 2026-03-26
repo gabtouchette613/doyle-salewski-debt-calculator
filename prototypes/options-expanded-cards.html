@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Options Compared — Doyle Salewski</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #f9fafb; display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; padding: 32px 16px; }
+.wrap { max-width: 680px; width: 100%; background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; }
+
+/* Header */
+.sec-hdr { padding: 20px 28px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.sec-hdr-title { font-size: 14px; font-weight: 800; color: #111827; letter-spacing: -0.2px; }
+.sec-hdr-sub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+.rec-pill { font-size: 10px; font-weight: 700; background: #eff6ff; color: #1161eb; border: 1px solid #bfdbfe; padding: 4px 12px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+
+/* Cards */
+.card { border-bottom: 1px solid #e5e7eb; position: relative; }
+.card:last-child { border-bottom: none; }
+.card.rec { border-left: 3px solid #1161eb; }
+.card.warn { border-left: 3px solid #dc2626; }
+.card.neutral { border-left: 3px solid #e5e7eb; }
+.card-inner { padding: 24px 28px; }
+.card.rec .card-inner { background: #fafcff; }
+.card.warn .card-inner { background: #fffafa; }
+
+/* Card header */
+.card-hdr { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.card-hdr-left { display: flex; align-items: center; gap: 10px; }
+.card-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+.card-name { font-size: 15px; font-weight: 800; color: #111827; letter-spacing: -0.3px; }
+.card-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; padding: 3px 9px; border-radius: 99px; margin-top: 1px; display: inline-block; }
+.card-total { text-align: right; flex-shrink: 0; }
+.card-total-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 3px; }
+.card-total-val { font-size: 22px; font-weight: 800; letter-spacing: -0.8px; line-height: 1; }
+
+/* Description */
+.card-desc { font-size: 13px; color: #6b7280; line-height: 1.65; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #f3f4f6; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #f3f4f6; }
+.stat { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; }
+.card.rec .stat { background: #fff; border-color: #dbeafe; }
+.stat-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 5px; }
+.stat-val { font-size: 16px; font-weight: 800; color: #111827; letter-spacing: -0.3px; line-height: 1; }
+.stat-sub { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+
+/* Details */
+.details { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #f3f4f6; }
+.detail { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.detail-lbl { font-size: 12px; color: #9ca3af; }
+.detail-val { font-size: 12px; font-weight: 700; color: #374151; text-align: right; }
+.chip { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 700; display: inline-block; }
+
+/* Pros / cons */
+.proscons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.pc-col-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+.pc-list { display: flex; flex-direction: column; gap: 6px; }
+.pc-item { font-size: 12px; color: #374151; display: flex; align-items: flex-start; gap: 6px; line-height: 1.45; }
+.pc-icon { font-size: 10px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+
+/* Administered by */
+.administered { font-size: 11px; color: #9ca3af; padding: 10px 14px; background: #f9fafb; border-radius: 8px; line-height: 1.55; }
+.administered strong { color: #374151; }
+
+@media (max-width: 540px) {
+  .card-inner { padding: 20px 18px; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .proscons { grid-template-columns: 1fr; }
+  .sec-hdr { padding: 16px 18px; flex-wrap: wrap; }
+  .card-hdr { flex-direction: column; gap: 8px; }
+  .card-total { text-align: left; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-hdr-title">Your options — full breakdown</div>
+      <div class="sec-hdr-sub">Based on $45,000 in unsecured debt · Ontario · ranked by total cost</div>
+    </div>
+    <span class="rec-pill">★ Recommended highlighted</span>
+  </div>
+
+  <!-- CONSUMER PROPOSAL -->
+  <div class="card rec">
+    <div class="card-inner">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-dot" style="background:#1161eb;margin-top:5px"></div>
+          <div>
+            <div class="card-name">Consumer Proposal</div>
+            <span class="card-badge" style="background:#1161eb;color:#fff">★ Best option for your situation</span>
+          </div>
+        </div>
+        <div class="card-total">
+          <div class="card-total-lbl">Total cost</div>
+          <div class="card-total-val" style="color:#1161eb">$13,500</div>
+        </div>
+      </div>
+      <div class="card-desc">A legally binding agreement between you and your creditors, filed by a Licensed Insolvency Trustee. You propose to repay a portion of what you owe — typically 30–50 cents on the dollar — in fixed monthly installments with zero interest. Creditors vote to accept or reject. Once accepted, it's legally binding on all of them.</div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-lbl">Monthly payment</div>
+          <div class="stat-val" style="color:#1161eb">$225</div>
+          <div class="stat-sub">Fixed · no surprises</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Duration</div>
+          <div class="stat-val">5 years</div>
+          <div class="stat-sub">Debt-free 2031</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Interest paid</div>
+          <div class="stat-val" style="color:#16a34a">$0</div>
+          <div class="stat-sub">From day one</div>
+        </div>
+      </div>
+      <div class="details">
+        <div class="detail"><span class="detail-lbl">You repay</span><span class="detail-val" style="color:#1161eb">~30% of original debt</span></div>
+        <div class="detail"><span class="detail-lbl">Legal protection from creditors</span><span class="detail-val" style="color:#16a34a">Immediate on filing</span></div>
+        <div class="detail"><span class="detail-lbl">Collection calls &amp; wage garnishment</span><span class="detail-val" style="color:#16a34a">Stop immediately</span></div>
+        <div class="detail"><span class="detail-lbl">Home &amp; car</span><span class="detail-val" style="color:#16a34a">Protected</span></div>
+        <div class="detail"><span class="detail-lbl">Credit rating impact</span><span class="detail-val"><span class="chip" style="background:#fef9c3;color:#854d0e;border:1px solid #fde047">R7 — 3 yrs post-completion</span></span></div>
+        <div class="detail"><span class="detail-lbl">Requires court approval</span><span class="detail-val">No — creditor vote only</span></div>
+        <div class="detail"><span class="detail-lbl">CRA &amp; student loan debt</span><span class="detail-val" style="color:#16a34a">Included</span></div>
+      </div>
+      <div class="proscons">
+        <div>
+          <div class="pc-col-lbl" style="color:#16a34a">What works</div>
+          <div class="pc-list">
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>Lowest total cost — by far</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>Zero interest from day one</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>Immediate legal protection</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>Keep your home and car</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>Fixed payments — nothing changes</div>
+          </div>
+        </div>
+        <div>
+          <div class="pc-col-lbl" style="color:#dc2626">To be aware of</div>
+          <div class="pc-list">
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>R7 credit rating for ~6 years from filing</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>Must be filed by a Licensed Insolvency Trustee</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>Creditors must accept — though most do</div>
+          </div>
+        </div>
+      </div>
+      <div class="administered"><strong>Administered by:</strong> A federally licensed and regulated Licensed Insolvency Trustee. The initial consultation is free, confidential, and carries no obligation.</div>
+    </div>
+  </div>
+
+  <!-- DEBT MANAGEMENT PLAN -->
+  <div class="card neutral">
+    <div class="card-inner">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-dot" style="background:#d97706;margin-top:2px"></div>
+          <div class="card-name">Debt Management Plan</div>
+        </div>
+        <div class="card-total">
+          <div class="card-total-lbl">Total cost</div>
+          <div class="card-total-val">$47,475</div>
+        </div>
+      </div>
+      <div class="card-desc">A voluntary repayment agreement negotiated by a credit counsellor with your unsecured creditors. You repay 100% of your principal, but interest is typically waived or reduced. It is not a legal process — creditors can opt out.</div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-lbl">Monthly payment</div>
+          <div class="stat-val">$791</div>
+          <div class="stat-sub">3.5× the proposal</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Duration</div>
+          <div class="stat-val">5 years</div>
+          <div class="stat-sub">Debt-free 2031</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Interest paid</div>
+          <div class="stat-val" style="color:#16a34a">$0</div>
+          <div class="stat-sub">If creditors agree</div>
+        </div>
+      </div>
+      <div class="details">
+        <div class="detail"><span class="detail-lbl">You repay</span><span class="detail-val">100% of original debt</span></div>
+        <div class="detail"><span class="detail-lbl">Legal protection from creditors</span><span class="detail-val" style="color:#dc2626">None</span></div>
+        <div class="detail"><span class="detail-lbl">Collection calls</span><span class="detail-val" style="color:#d97706">May continue</span></div>
+        <div class="detail"><span class="detail-lbl">Creditor participation</span><span class="detail-val" style="color:#d97706">Voluntary — can opt out</span></div>
+        <div class="detail"><span class="detail-lbl">Credit rating impact</span><span class="detail-val"><span class="chip" style="background:#fef9c3;color:#854d0e;border:1px solid #fde047">R7 — 2 yrs post-completion</span></span></div>
+        <div class="detail"><span class="detail-lbl">CRA &amp; student loan debt</span><span class="detail-val" style="color:#dc2626">Not included</span></div>
+        <div class="detail"><span class="detail-lbl">Cost vs Consumer Proposal</span><span class="detail-val" style="color:#dc2626">$33,975 more</span></div>
+      </div>
+      <div class="proscons">
+        <div>
+          <div class="pc-col-lbl" style="color:#16a34a">What works</div>
+          <div class="pc-list">
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>No formal insolvency record</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>Zero interest if creditors agree</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>Builds structured repayment habits</div>
+          </div>
+        </div>
+        <div>
+          <div class="pc-col-lbl" style="color:#dc2626">To be aware of</div>
+          <div class="pc-list">
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>Repay full principal — 3.5× a proposal</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>No legal protection from lawsuits</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>Not all creditors have to participate</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>CRA and student debt excluded</div>
+          </div>
+        </div>
+      </div>
+      <div class="administered"><strong>Administered by:</strong> A non-profit credit counselling agency. Fees are built into your monthly payment.</div>
+    </div>
+  </div>
+
+  <!-- CONSOLIDATION LOAN -->
+  <div class="card neutral">
+    <div class="card-inner">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-dot" style="background:#0891b2;margin-top:2px"></div>
+          <div class="card-name">Consolidation Loan</div>
+        </div>
+        <div class="card-total">
+          <div class="card-total-lbl">Total cost</div>
+          <div class="card-total-val">$56,280</div>
+        </div>
+      </div>
+      <div class="card-desc">A new loan from a bank or lender used to pay off all existing debts. You're left with one monthly payment — ideally at a lower rate than your current mix of debts. Requires a minimum credit score to qualify, which many people carrying this level of debt may not have.</div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-lbl">Monthly payment</div>
+          <div class="stat-val">$938</div>
+          <div class="stat-sub">4× the proposal</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Duration</div>
+          <div class="stat-val">5 years</div>
+          <div class="stat-sub">Debt-free 2031</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Interest paid</div>
+          <div class="stat-val" style="color:#d97706">$11,280</div>
+          <div class="stat-sub">At 16.99% APR</div>
+        </div>
+      </div>
+      <div class="details">
+        <div class="detail"><span class="detail-lbl">You repay</span><span class="detail-val">100% + $11,280 interest</span></div>
+        <div class="detail"><span class="detail-lbl">Interest rate</span><span class="detail-val" style="color:#d97706">~16.99% APR (estimated)</span></div>
+        <div class="detail"><span class="detail-lbl">Credit score required</span><span class="detail-val" style="color:#d97706">650+ minimum</span></div>
+        <div class="detail"><span class="detail-lbl">Legal protection</span><span class="detail-val" style="color:#dc2626">None</span></div>
+        <div class="detail"><span class="detail-lbl">Credit rating impact</span><span class="detail-val"><span class="chip" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0">Improves with on-time payments</span></span></div>
+        <div class="detail"><span class="detail-lbl">Cost vs Consumer Proposal</span><span class="detail-val" style="color:#dc2626">$42,780 more</span></div>
+      </div>
+      <div class="proscons">
+        <div>
+          <div class="pc-col-lbl" style="color:#16a34a">What works</div>
+          <div class="pc-list">
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>No formal insolvency process</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>Single manageable payment</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#16a34a">✓</span>Can improve credit over time</div>
+          </div>
+        </div>
+        <div>
+          <div class="pc-col-lbl" style="color:#dc2626">To be aware of</div>
+          <div class="pc-list">
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>Must qualify — 650+ credit score</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>Still pays $11,280 in interest</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>4× more expensive than a proposal</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>No legal protection from creditors</div>
+          </div>
+        </div>
+      </div>
+      <div class="administered"><strong>Administered by:</strong> Bank, credit union, or online lender. Rate and qualification depend on your credit profile at time of application.</div>
+    </div>
+  </div>
+
+  <!-- DO NOTHING -->
+  <div class="card warn">
+    <div class="card-inner">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-dot" style="background:#dc2626;margin-top:5px"></div>
+          <div>
+            <div class="card-name" style="color:#dc2626">Do Nothing</div>
+            <span class="card-badge" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">Baseline — not a recommendation</span>
+          </div>
+        </div>
+        <div class="card-total">
+          <div class="card-total-lbl">Total cost</div>
+          <div class="card-total-val" style="color:#dc2626">$128,400</div>
+        </div>
+      </div>
+      <div class="card-desc">Continuing to make minimum payments at current interest rates with no intervention. Shown here so you understand the true cost of inaction — not as a path forward. The math is straightforward: compound interest ensures you pay back nearly three times what you borrowed.</div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-lbl">Monthly payment</div>
+          <div class="stat-val" style="color:#dc2626">$1,125</div>
+          <div class="stat-sub">5× the proposal</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Duration</div>
+          <div class="stat-val" style="color:#dc2626">27 years</div>
+          <div class="stat-sub">Debt-free 2053</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Interest paid</div>
+          <div class="stat-val" style="color:#dc2626">$83,400</div>
+          <div class="stat-sub">Nearly twice the debt</div>
+        </div>
+      </div>
+      <div class="details">
+        <div class="detail"><span class="detail-lbl">You repay</span><span class="detail-val" style="color:#dc2626">$128,400 — 2.85× original debt</span></div>
+        <div class="detail"><span class="detail-lbl">Monthly lost to interest</span><span class="detail-val" style="color:#dc2626">$825 — never reduces balance</span></div>
+        <div class="detail"><span class="detail-lbl">Legal protection</span><span class="detail-val" style="color:#dc2626">None — creditors can sue</span></div>
+        <div class="detail"><span class="detail-lbl">Collection activity</span><span class="detail-val" style="color:#dc2626">Continues and escalates</span></div>
+        <div class="detail"><span class="detail-lbl">Credit rating</span><span class="detail-val"><span class="chip" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">R9 — stays damaged throughout</span></span></div>
+        <div class="detail"><span class="detail-lbl">Cost vs Consumer Proposal</span><span class="detail-val" style="color:#dc2626">$114,900 more</span></div>
+      </div>
+      <div class="proscons">
+        <div>
+          <div class="pc-col-lbl" style="color:#9ca3af">Only upside</div>
+          <div class="pc-list">
+            <div class="pc-item"><span class="pc-icon" style="color:#9ca3af">→</span>No formal process required</div>
+          </div>
+        </div>
+        <div>
+          <div class="pc-col-lbl" style="color:#dc2626">The reality</div>
+          <div class="pc-list">
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>Pay $114,900 more than a proposal</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>27 years of financial strain</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>Credit damaged the entire time</div>
+            <div class="pc-item"><span class="pc-icon" style="color:#dc2626">✗</span>No protection if sued by creditors</div>
+          </div>
+        </div>
+      </div>
+      <div class="administered" style="background:#fef2f2;color:#9b2c2c"><strong style="color:#7f1d1d">Note:</strong> This scenario is shown as a reference point only. It represents the financial cost of making no changes to your current situation.</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
