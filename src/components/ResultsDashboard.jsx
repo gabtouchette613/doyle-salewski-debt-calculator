@@ -56,12 +56,33 @@ export default function ResultsDashboard( { results, lang, onReset } ) {
       <div className="dsc-results-body">
 
         <aside className="dsc-results-sidebar">
-          <ReportNav
-            layout="vertical"
-            activeSection={ activeSection }
-            onTabClick={ scrollToSection }
-            lang={ lang }
-          />
+          <div className="dsc-sidebar-nav-card">
+            <ReportNav
+              layout="vertical"
+              activeSection={ activeSection }
+              onTabClick={ scrollToSection }
+              lang={ lang }
+            />
+          </div>
+          <div className="dsc-sidebar-cta">
+            <div className="dsc-sidebar-cta-title">{ t( 'sidebar-cta-title' ) }</div>
+            <div className="dsc-sidebar-cta-sub">{ t( 'sidebar-cta-sub' ) }</div>
+            <a
+              href={ `tel:${ ( window.dsCalcData?.firmPhone ?? '(613) 237-5555' ).replace( /\D/g, '' ) }` }
+              className="dsc-sidebar-cta-phone"
+            >
+              { window.dsCalcData?.firmPhone ?? '(613) 237-5555' }
+            </a>
+            <button
+              className="dsc-sidebar-cta-btn"
+              onClick={ () => {
+                const el = document.getElementById( 'dsc-section-cta' );
+                if ( el ) el.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+              } }
+            >
+              { t( 'sidebar-cta-btn' ) }
+            </button>
+          </div>
         </aside>
 
         <main className="dsc-results-content">

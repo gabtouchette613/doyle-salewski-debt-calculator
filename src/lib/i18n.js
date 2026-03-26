@@ -315,6 +315,11 @@ export const T = {
     'cta-success-sub':            'Your report has been sent. A Licensed Insolvency Trustee will contact you within one business day.',
     'cta-close':                  'Close',
 
+    // Sidebar CTA
+    'sidebar-cta-title': 'Free consultation',
+    'sidebar-cta-sub':   'Talk to a Licensed Insolvency Trustee — no obligation.',
+    'sidebar-cta-btn':   'Book a free call →',
+
     // Calculating screen
     'calc-title': 'Analyzing your situation',
     'calc-msgs': [
@@ -649,6 +654,11 @@ export const T = {
     'cta-success-title':          'Nous vous contacterons bientôt',
     'cta-success-sub':            'Votre rapport a été envoyé. Un syndic autorisé en insolvabilité vous contactera dans un jour ouvrable.',
     'cta-close':                  'Fermer',
+
+    // Sidebar CTA
+    'sidebar-cta-title': 'Consultation gratuite',
+    'sidebar-cta-sub':   'Parlez à un syndic autorisé — sans obligation.',
+    'sidebar-cta-btn':   'Réserver un appel →',
 
     // Calculating screen
     'calc-title': 'Analyse de votre situation',
