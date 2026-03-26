@@ -647,11 +647,10 @@
   }
 
   .dsc-results-body {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
+    display: block;
 
     @media (min-width: 768px) {
+      display: grid;
       grid-template-columns: 210px minmax(0, 1fr);
       gap: 0;
       align-items: start;
@@ -1662,10 +1661,14 @@
 
   .dsc-pay-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 16px;
     align-items: stretch;
+
+    @media (min-width: 400px) {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
   .dsc-pay-card-outer {
