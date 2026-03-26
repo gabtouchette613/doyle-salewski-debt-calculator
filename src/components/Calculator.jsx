@@ -1,6 +1,5 @@
-import { useReducer } from '@wordpress/element';
+import { useReducer, useState } from '@wordpress/element';
 import { getT } from '../lib/i18n';
-import { calcResults } from '../lib/calculator';
 import StepWizard from './StepWizard';
 import CalculatingScreen from './CalculatingScreen';
 import ResultsDashboard from './ResultsDashboard';
@@ -16,6 +15,8 @@ const initialState = {
   debtItems:     [],
 
   // Step 2
+  expenseMode:   'basic',
+  basicExpenses: '',
   income:        '',
   housing:       '',
   groceries:     '',
@@ -69,7 +70,8 @@ function reducer( state, action ) {
 }
 
 export default function Calculator() {
-  const [ state, dispatch ] = useReducer( reducer, initialState );
+  const [ state, dispatch ]   = useReducer( reducer, initialState );
+  const [ calcInput, setCalcInput ] = useState( null );
 
   function handleNext() {
     dispatch( { type: 'SET_STEP', step: 2 } );
@@ -80,29 +82,30 @@ export default function Calculator() {
   }
 
   function handleSubmit() {
-    dispatch( { type: 'SET_STEP', step: 'calculating' } );
-
     // Compute the debt total for the calculation engine
-    let debt = parseFloat( state.totalDebt ) || 0;
-    const advancedItems = state.debtItems.map( item => ( {
-      type:   item.type,
-      amount: parseFloat( item.amount ) || 0,
-    } ) );
+    let debt = Math.min( parseFloat( state.totalDebt ) || 0, 9_999_999 );
+    const advancedItems = state.debtItems
+      .map( item => ( { type: item.type, amount: parseFloat( item.amount ) || 0 } ) )
+      .filter( item => item.amount > 0 );
 
     // Advanced total wins if populated
     if ( state.debtMode === 'advanced' ) {
-      const advTotal = advancedItems.reduce( ( s, d ) => s + d.amount, 0 );
+      const advTotal = Math.min(
+        advancedItems.reduce( ( s, d ) => s + d.amount, 0 ),
+        9_999_999
+      );
       if ( advTotal > 0 ) debt = advTotal;
     }
 
-    const totalExpenses =
-      ( parseFloat( state.housing )       || 0 ) +
-      ( parseFloat( state.groceries )     || 0 ) +
-      ( parseFloat( state.transport )     || 0 ) +
-      ( parseFloat( state.utilities )     || 0 ) +
-      ( parseFloat( state.insurance )     || 0 ) +
-      ( parseFloat( state.childcare )     || 0 ) +
-      ( parseFloat( state.otherExpenses ) || 0 );
+    const totalExpenses = state.expenseMode === 'basic'
+      ? ( parseFloat( state.basicExpenses ) || 0 )
+      : ( parseFloat( state.housing )       || 0 ) +
+        ( parseFloat( state.groceries )     || 0 ) +
+        ( parseFloat( state.transport )     || 0 ) +
+        ( parseFloat( state.utilities )     || 0 ) +
+        ( parseFloat( state.insurance )     || 0 ) +
+        ( parseFloat( state.childcare )     || 0 ) +
+        ( parseFloat( state.otherExpenses ) || 0 );
 
     const inp = {
       debt,
@@ -112,15 +115,17 @@ export default function Calculator() {
       debtItems: state.debtMode === 'advanced' ? advancedItems : [],
     };
 
-    // Defer calculation until after calculating screen mounts
-    setTimeout( () => {
-      const results = calcResults( inp );
-      dispatch( { type: 'SET_RESULTS', results } );
-    }, 2900 );
+    setCalcInput( inp );
+    dispatch( { type: 'SET_STEP', step: 'calculating' } );
   }
 
   if ( state.currentStep === 'calculating' ) {
-    return <CalculatingScreen />;
+    return (
+      <CalculatingScreen
+        calcInput={ calcInput }
+        onComplete={ results => dispatch( { type: 'SET_RESULTS', results } ) }
+      />
+    );
   }
 
   if ( state.currentStep === 'results' ) {

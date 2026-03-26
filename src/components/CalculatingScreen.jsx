@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from '@wordpress/element';
 import { t } from './Calculator';
+import { calcResults } from '../lib/calculator';
 
 const MESSAGE_INTERVAL_MS = 550;
 
-export default function CalculatingScreen() {
+export default function CalculatingScreen( { calcInput, onComplete } ) {
   const msgs                  = t( 'calc-msgs' ) || [];
   const [ msgIndex, setMsgIndex ] = useState( 0 );
   const intervalRef           = useRef( null );
+
+  const calcTimerRef = useRef( null );
 
   useEffect( () => {
     intervalRef.current = setInterval( () => {
@@ -17,6 +20,15 @@ export default function CalculatingScreen() {
       clearInterval( intervalRef.current );
     };
   }, [ msgs.length ] );
+
+  useEffect( () => {
+    if ( ! calcInput ) return;
+    calcTimerRef.current = setTimeout( () => {
+      const results = calcResults( calcInput );
+      onComplete( results );
+    }, 2900 );
+    return () => clearTimeout( calcTimerRef.current );
+  }, [] );
 
   return (
     <div className="dsc-wrapper">

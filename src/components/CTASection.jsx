@@ -13,6 +13,7 @@ export default function CTASection({ results, lang }) {
   const [phone,      setPhone]      = useState('');
   const [callTime,   setCallTime]   = useState('morning');
   const [errors,     setErrors]     = useState({});
+  const [trap,       setTrap]       = useState('');
 
   const proposal  = results.options.find(o => o.id === 'proposal');
   const firmName  = window.dsCalcData?.firmName  ?? 'Doyle Salewski';
@@ -53,6 +54,7 @@ export default function CTASection({ results, lang }) {
       is_advanced:         results.isAdvancedRate,
       recommended_payment: proposal?.payment ?? 0,
       recommended_total:   proposal?.total   ?? 0,
+      website:             trap,
       lang,
     };
 
@@ -159,6 +161,17 @@ export default function CTASection({ results, lang }) {
                   {t('cta-modal-summary-b')}{' '}
                   <strong>{t('cta-modal-summary-proposal')} {fmtC(proposal?.payment ?? 0)}/mo</strong>
                 </span>
+              </div>
+
+              <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', height: '1px', overflow: 'hidden' }}>
+                <input
+                  type="text"
+                  name="website"
+                  value={ trap }
+                  onChange={ e => setTrap( e.target.value ) }
+                  tabIndex={ -1 }
+                  autoComplete="off"
+                />
               </div>
 
               <div className="dsc-modal-field">

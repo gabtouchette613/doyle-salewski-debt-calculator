@@ -17,86 +17,52 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DS_CALC_VERSION', '1.0.13' );
+define( 'DS_CALC_VERSION', '1.0.14' );
 define( 'DS_CALC_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DS_CALC_URL', plugin_dir_url( __FILE__ ) );
 
-// ── Enqueue scripts and styles ─────────────────────────────────────────────
-
-function ds_calc_enqueue_assets() {
-	global $post;
-
-	if ( ! is_a( $post, 'WP_Post' ) || ! has_shortcode( $post->post_content, 'ds_debt_calculator' ) ) {
-		return;
-	}
-
-	$asset_file = DS_CALC_DIR . 'build/index.asset.php';
-	if ( ! file_exists( $asset_file ) ) {
-		return;
-	}
-
-	$asset = include $asset_file;
-
-	// Vendor scripts
-	wp_enqueue_script(
-		'ds-calc-chartjs',
-		DS_CALC_URL . 'assets/vendor/chart.umd.min.js',
-		[],
-		'4.4.1',
-		true
-	);
-
-	wp_enqueue_script(
-		'ds-calc-html2canvas',
-		DS_CALC_URL . 'assets/vendor/html2canvas.min.js',
-		[],
-		'1.4.1',
-		true
-	);
-
-	wp_enqueue_script(
-		'ds-calc-jspdf',
-		DS_CALC_URL . 'assets/vendor/jspdf.umd.min.js',
-		[],
-		'2.5.1',
-		true
-	);
-
-	// Main bundle
-	wp_enqueue_script(
-		'ds-debt-calc',
-		DS_CALC_URL . 'build/index.js',
-		array_merge( $asset['dependencies'], [ 'ds-calc-chartjs', 'ds-calc-html2canvas', 'ds-calc-jspdf' ] ),
-		$asset['version'],
-		true
-	);
-
-	wp_localize_script( 'ds-debt-calc', 'dsCalcData', [
-		'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-		'nonce'      => wp_create_nonce( 'ds_calc_lead' ),
-		'restUrl'    => rest_url( 'ds-calc/v1/' ),
-		'restNonce'  => wp_create_nonce( 'wp_rest' ),
-		'locale'     => substr( get_locale(), 0, 2 ),
-		'firmName'   => get_option( 'ds_calc_firm_name', 'Doyle Salewski' ),
-		'firmPhone'  => get_option( 'ds_calc_phone', '(613) 237-5555' ),
-		'emailTo'    => get_option( 'ds_calc_email_to', get_option( 'admin_email' ) ),
-		'crmWebhook' => get_option( 'ds_calc_crm_webhook', '' ),
-		'logoUrl'    => DS_CALC_URL . 'assets/images/ds-logo.png',
-		'version'    => DS_CALC_VERSION,
-	] );
-
-	wp_enqueue_style(
-		'ds-debt-calc',
-		DS_CALC_URL . 'build/index.css',
-		[],
-		$asset['version']
-	);
-}
-add_action( 'wp_enqueue_scripts', 'ds_calc_enqueue_assets' );
-
-// ── Shortcode ──────────────────────────────────────────────────────────────
+// ── Shortcode & Late-Loading Assets ───────────────────────────────────────
 
 function ds_calc_shortcode() {
+	static $loaded = false;
+	if ( ! $loaded ) {
+		$asset_file = DS_CALC_DIR . 'build/index.asset.php';
+		if ( file_exists( $asset_file ) ) {
+			$asset = include $asset_file;
+
+			wp_enqueue_script( 'ds-calc-chartjs',     DS_CALC_URL . 'assets/vendor/chart.umd.min.js',     [], '4.4.1', true );
+			wp_enqueue_script( 'ds-calc-html2canvas', DS_CALC_URL . 'assets/vendor/html2canvas.min.js',  [], '1.4.1', true );
+			wp_enqueue_script( 'ds-calc-jspdf',       DS_CALC_URL . 'assets/vendor/jspdf.umd.min.js',    [], '2.5.1', true );
+
+			wp_enqueue_script(
+				'ds-debt-calc',
+				DS_CALC_URL . 'build/index.js',
+				array_merge( $asset['dependencies'], [ 'ds-calc-chartjs', 'ds-calc-html2canvas', 'ds-calc-jspdf' ] ),
+				$asset['version'],
+				true
+			);
+
+			wp_localize_script( 'ds-debt-calc', 'dsCalcData', [
+				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+				'nonce'        => wp_create_nonce( 'ds_calc_lead' ),
+				'restUrl'      => rest_url( 'ds-calc/v1/' ),
+				'restNonce'    => wp_create_nonce( 'wp_rest' ),
+				'locale'       => substr( get_locale(), 0, 2 ),
+				'firmName'     => get_option( 'ds_calc_firm_name', 'Doyle Salewski' ),
+				'firmPhone'    => get_option( 'ds_calc_phone', '(613) 237-5555' ),
+				'emailTo'      => get_option( 'ds_calc_email_to', get_option( 'admin_email' ) ),
+				'crmWebhook'   => get_option( 'ds_calc_crm_webhook', '' ),
+				'logoUrl'      => DS_CALC_URL . 'assets/images/ds-logo.png',
+				'proposalRate' => (float) get_option( 'ds_calc_proposal_rate', 0.30 ),
+				'dmpAdminFee'  => (float) get_option( 'ds_calc_dmp_fee',       0.055 ),
+				'consRate'     => (float) get_option( 'ds_calc_cons_rate',     0.1699 ),
+				'version'      => DS_CALC_VERSION,
+			] );
+
+			wp_enqueue_style( 'ds-debt-calc', DS_CALC_URL . 'build/index.css', [], $asset['version'] );
+		}
+		$loaded = true;
+	}
 	return '<div id="dsc-app" class="dsc-root"></div>';
 }
 add_shortcode( 'ds_debt_calculator', 'ds_calc_shortcode' );
@@ -147,6 +113,10 @@ add_action( 'rest_api_init', 'ds_calc_register_rest_routes' );
 function ds_calc_handle_lead( WP_REST_Request $request ) {
 	if ( ! wp_verify_nonce( $request->get_header( 'X-WP-Nonce' ), 'wp_rest' ) ) {
 		return new WP_Error( 'forbidden', __( 'Invalid nonce.', 'ds-debt-calc' ), [ 'status' => 403 ] );
+	}
+
+	if ( ! empty( $request->get_param( 'website' ) ) ) {
+		return new WP_Error( 'spam', __( 'Blocked.', 'ds-debt-calc' ), [ 'status' => 403 ] );
 	}
 
 	$name     = $request->get_param( 'name' )     ?? '';
@@ -218,17 +188,23 @@ function ds_calc_settings_page() {
 	}
 
 	if ( isset( $_POST['ds_calc_save'] ) && check_admin_referer( 'ds_calc_settings' ) ) {
-		update_option( 'ds_calc_firm_name',   sanitize_text_field( $_POST['ds_calc_firm_name']   ?? '' ) );
-		update_option( 'ds_calc_phone',       sanitize_text_field( $_POST['ds_calc_phone']       ?? '' ) );
-		update_option( 'ds_calc_email_to',    sanitize_email(      $_POST['ds_calc_email_to']    ?? '' ) );
-		update_option( 'ds_calc_crm_webhook', esc_url_raw(         $_POST['ds_calc_crm_webhook'] ?? '' ) );
+		update_option( 'ds_calc_firm_name',    sanitize_text_field( $_POST['ds_calc_firm_name']    ?? '' ) );
+		update_option( 'ds_calc_phone',        sanitize_text_field( $_POST['ds_calc_phone']        ?? '' ) );
+		update_option( 'ds_calc_email_to',     sanitize_email(      $_POST['ds_calc_email_to']     ?? '' ) );
+		update_option( 'ds_calc_crm_webhook',  esc_url_raw(         $_POST['ds_calc_crm_webhook']  ?? '' ) );
+		update_option( 'ds_calc_proposal_rate', (float) ( $_POST['ds_calc_proposal_rate'] ?? 0.30 ) );
+		update_option( 'ds_calc_dmp_fee',       (float) ( $_POST['ds_calc_dmp_fee']       ?? 0.055 ) );
+		update_option( 'ds_calc_cons_rate',     (float) ( $_POST['ds_calc_cons_rate']     ?? 0.1699 ) );
 		echo '<div class="updated"><p>' . esc_html__( 'Settings saved.', 'ds-debt-calc' ) . '</p></div>';
 	}
 
-	$firm_name   = esc_attr( get_option( 'ds_calc_firm_name',   'Doyle Salewski' ) );
-	$phone       = esc_attr( get_option( 'ds_calc_phone',       '(613) 237-5555' ) );
-	$email_to    = esc_attr( get_option( 'ds_calc_email_to',    get_option( 'admin_email' ) ) );
-	$crm_webhook = esc_attr( get_option( 'ds_calc_crm_webhook', '' ) );
+	$firm_name     = esc_attr( get_option( 'ds_calc_firm_name',    'Doyle Salewski' ) );
+	$phone         = esc_attr( get_option( 'ds_calc_phone',        '(613) 237-5555' ) );
+	$email_to      = esc_attr( get_option( 'ds_calc_email_to',     get_option( 'admin_email' ) ) );
+	$crm_webhook   = esc_attr( get_option( 'ds_calc_crm_webhook',  '' ) );
+	$proposal_rate = esc_attr( get_option( 'ds_calc_proposal_rate', '0.30' ) );
+	$dmp_fee       = esc_attr( get_option( 'ds_calc_dmp_fee',       '0.055' ) );
+	$cons_rate     = esc_attr( get_option( 'ds_calc_cons_rate',     '0.1699' ) );
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Debt Calculator Settings', 'ds-debt-calc' ); ?></h1>
@@ -250,6 +226,18 @@ function ds_calc_settings_page() {
 				<tr>
 					<th><label for="ds_calc_crm_webhook"><?php esc_html_e( 'CRM Webhook URL', 'ds-debt-calc' ); ?></label></th>
 					<td><input type="url" id="ds_calc_crm_webhook" name="ds_calc_crm_webhook" value="<?php echo $crm_webhook; ?>" class="regular-text" /></td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_proposal_rate"><?php esc_html_e( 'Consumer Proposal Rate', 'ds-debt-calc' ); ?></label></th>
+					<td><input type="number" step="0.01" min="0" max="1" id="ds_calc_proposal_rate" name="ds_calc_proposal_rate" value="<?php echo $proposal_rate; ?>" class="small-text" /><p class="description"><?php esc_html_e( 'Default: 0.30 (30% of debt settled). Range: 0.20–0.60.', 'ds-debt-calc' ); ?></p></td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_dmp_fee"><?php esc_html_e( 'DMP Admin Fee', 'ds-debt-calc' ); ?></label></th>
+					<td><input type="number" step="0.001" min="0" max="0.5" id="ds_calc_dmp_fee" name="ds_calc_dmp_fee" value="<?php echo $dmp_fee; ?>" class="small-text" /><p class="description"><?php esc_html_e( 'Default: 0.055 (5.5%).', 'ds-debt-calc' ); ?></p></td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_cons_rate"><?php esc_html_e( 'Consolidation Loan APR', 'ds-debt-calc' ); ?></label></th>
+					<td><input type="number" step="0.0001" min="0" max="1" id="ds_calc_cons_rate" name="ds_calc_cons_rate" value="<?php echo $cons_rate; ?>" class="small-text" /><p class="description"><?php esc_html_e( 'Default: 0.1699 (16.99%).', 'ds-debt-calc' ); ?></p></td>
 				</tr>
 			</table>
 			<p class="submit">

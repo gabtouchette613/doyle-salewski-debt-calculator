@@ -30,10 +30,21 @@ function ProgressBar( { step } ) {
   );
 }
 
-function CurrencyInput( { id, value, onChange, placeholder, large, hasError, className } ) {
+function CurrencyInput( { id, value, onChange, placeholder, large, hasError, errorId, className } ) {
+  function fmtDisplay( raw ) {
+    const digits = String( raw ?? '' ).replace( /\D/g, '' );
+    if ( ! digits ) return '';
+    return parseInt( digits, 10 ).toLocaleString( 'en-CA' );
+  }
+
+  function handleChange( e ) {
+    const raw = e.target.value.replace( /\D/g, '' );
+    onChange( raw );
+  }
+
   return (
     <div className="dsc-input-wrap">
-      <span className="dsc-input-prefix">$</span>
+      <span className="dsc-input-prefix" aria-hidden="true">$</span>
       <input
         id={ id }
         className={ [
@@ -42,11 +53,13 @@ function CurrencyInput( { id, value, onChange, placeholder, large, hasError, cla
           hasError ? 'dsc-input--error' : '',
           className || '',
         ].filter( Boolean ).join( ' ' ) }
-        type="number"
+        type="text"
         inputMode="numeric"
-        value={ value }
-        onChange={ e => onChange( e.target.value ) }
+        value={ fmtDisplay( value ) }
+        onChange={ handleChange }
         placeholder={ placeholder || '0' }
+        aria-invalid={ hasError ? 'true' : 'false' }
+        aria-describedby={ hasError && errorId ? errorId : undefined }
       />
     </div>
   );
@@ -74,7 +87,14 @@ function Step1( { state, dispatch, onNext } ) {
   }
 
   function handleNext() {
-    if ( validate() ) onNext();
+    if ( validate() ) {
+      onNext();
+    } else {
+      setTimeout( () => {
+        const el = document.querySelector( '.dsc-input--error' );
+        if ( el ) el.focus();
+      }, 50 );
+    }
   }
 
   const advTotal = state.debtItems.reduce(
@@ -96,6 +116,7 @@ function Step1( { state, dispatch, onNext } ) {
             className={ `dsc-mode-btn${ state.debtMode === 'basic' ? ' dsc-mode-btn--active' : '' }` }
             onClick={ () => dispatch( { type: 'SET_FIELD', field: 'debtMode', value: 'basic' } ) }
             type="button"
+            aria-pressed={ state.debtMode === 'basic' }
           >
             { t( 'w1-mode-basic' ) }
           </button>
@@ -103,6 +124,7 @@ function Step1( { state, dispatch, onNext } ) {
             className={ `dsc-mode-btn${ state.debtMode === 'advanced' ? ' dsc-mode-btn--active' : '' }` }
             onClick={ () => dispatch( { type: 'SET_FIELD', field: 'debtMode', value: 'advanced' } ) }
             type="button"
+            aria-pressed={ state.debtMode === 'advanced' }
           >
             { t( 'w1-mode-advanced' ) }
           </button>
@@ -122,9 +144,10 @@ function Step1( { state, dispatch, onNext } ) {
               placeholder={ t( 'w1-debt-placeholder' ) }
               large
               hasError={ !! errors.totalDebt }
+              errorId="dsc-total-debt-error"
             />
             { errors.totalDebt && (
-              <p className="dsc-field-error">{ errors.totalDebt }</p>
+              <p id="dsc-total-debt-error" className="dsc-field-error">{ errors.totalDebt }</p>
             ) }
           </div>
         ) }
@@ -250,23 +273,34 @@ function Step2( { state, dispatch, onBack, onSubmit } ) {
     if ( ! state.income || parseFloat( state.income ) <= 0 ) {
       errs.income = t( 'w2-income-error' );
     }
+    if ( state.expenseMode === 'basic' && ( ! state.basicExpenses || parseFloat( state.basicExpenses ) <= 0 ) ) {
+      errs.basicExpenses = t( 'w2-exp-basic-error' );
+    }
     setErrors( errs );
     return Object.keys( errs ).length === 0;
   }
 
   function handleSubmit() {
-    if ( validate() ) onSubmit();
+    if ( validate() ) {
+      onSubmit();
+    } else {
+      setTimeout( () => {
+        const el = document.querySelector( '.dsc-input--error' );
+        if ( el ) el.focus();
+      }, 50 );
+    }
   }
 
-  const income       = parseFloat( state.income )        || 0;
-  const totalExp     =
-    ( parseFloat( state.housing )       || 0 ) +
-    ( parseFloat( state.groceries )     || 0 ) +
-    ( parseFloat( state.transport )     || 0 ) +
-    ( parseFloat( state.utilities )     || 0 ) +
-    ( parseFloat( state.insurance )     || 0 ) +
-    ( parseFloat( state.childcare )     || 0 ) +
-    ( parseFloat( state.otherExpenses ) || 0 );
+  const income       = parseFloat( state.income ) || 0;
+  const totalExp     = state.expenseMode === 'basic'
+    ? ( parseFloat( state.basicExpenses ) || 0 )
+    : ( parseFloat( state.housing )       || 0 ) +
+      ( parseFloat( state.groceries )     || 0 ) +
+      ( parseFloat( state.transport )     || 0 ) +
+      ( parseFloat( state.utilities )     || 0 ) +
+      ( parseFloat( state.insurance )     || 0 ) +
+      ( parseFloat( state.childcare )     || 0 ) +
+      ( parseFloat( state.otherExpenses ) || 0 );
   const remaining    = income - totalExp;
   const isPositive   = remaining > 0;
 
@@ -290,46 +324,91 @@ function Step2( { state, dispatch, onBack, onSubmit } ) {
             placeholder={ t( 'w2-income-placeholder' ) }
             large
             hasError={ !! errors.income }
+            errorId="dsc-income-error"
           />
           { errors.income && (
-            <p className="dsc-field-error">{ errors.income }</p>
+            <p id="dsc-income-error" className="dsc-field-error">{ errors.income }</p>
           ) }
         </div>
 
         <hr className="dsc-divider" />
         <p className="dsc-section-label">{ t( 'w2-exp-section' ) }</p>
 
-        {/* Expense grid */}
-        <div className="dsc-expense-grid">
-          { EXPENSE_FIELDS.map( ( { field, labelKey, hintKey } ) => (
-            <div key={ field } className="dsc-field">
-              <label className="dsc-label" htmlFor={ `dsc-${ field }` }>
-                { t( labelKey ) }
+        {/* Expense mode toggle */}
+        <div className="dsc-mode-toggle" role="group" aria-label="Expense input mode">
+          <button
+            className={ `dsc-mode-btn${ state.expenseMode === 'basic' ? ' dsc-mode-btn--active' : '' }` }
+            type="button"
+            aria-pressed={ state.expenseMode === 'basic' }
+            onClick={ () => dispatch( { type: 'SET_FIELD', field: 'expenseMode', value: 'basic' } ) }
+          >
+            { t( 'w2-mode-basic' ) }
+          </button>
+          <button
+            className={ `dsc-mode-btn${ state.expenseMode === 'advanced' ? ' dsc-mode-btn--active' : '' }` }
+            type="button"
+            aria-pressed={ state.expenseMode === 'advanced' }
+            onClick={ () => dispatch( { type: 'SET_FIELD', field: 'expenseMode', value: 'advanced' } ) }
+          >
+            { t( 'w2-mode-advanced' ) }
+          </button>
+        </div>
+
+        {/* Basic expense mode — single field */}
+        { state.expenseMode === 'basic' && (
+          <div className="dsc-field">
+            <label className="dsc-label" htmlFor="dsc-basic-expenses">
+              { t( 'w2-exp-basic-label' ) }
+            </label>
+            <p className="dsc-hint">{ t( 'w2-exp-basic-hint' ) }</p>
+            <CurrencyInput
+              id="dsc-basic-expenses"
+              value={ state.basicExpenses }
+              onChange={ v => dispatch( { type: 'SET_FIELD', field: 'basicExpenses', value: v } ) }
+              placeholder="0"
+              hasError={ !! errors.basicExpenses }
+              errorId="dsc-basic-expenses-error"
+            />
+            { errors.basicExpenses && (
+              <p id="dsc-basic-expenses-error" className="dsc-field-error">{ errors.basicExpenses }</p>
+            ) }
+          </div>
+        ) }
+
+        {/* Advanced expense mode — 7-field grid */}
+        { state.expenseMode === 'advanced' && (
+          <>
+            <div className="dsc-expense-grid">
+              { EXPENSE_FIELDS.map( ( { field, labelKey, hintKey } ) => (
+                <div key={ field } className="dsc-field">
+                  <label className="dsc-label" htmlFor={ `dsc-${ field }` }>
+                    { t( labelKey ) }
+                  </label>
+                  { hintKey && <p className="dsc-hint">{ t( hintKey ) }</p> }
+                  <CurrencyInput
+                    id={ `dsc-${ field }` }
+                    value={ state[ field ] }
+                    onChange={ v => dispatch( { type: 'SET_FIELD', field, value: v } ) }
+                    placeholder="0"
+                  />
+                </div>
+              ) ) }
+            </div>
+
+            <div className="dsc-field">
+              <label className="dsc-label" htmlFor="dsc-other-expenses">
+                { t( 'w2-other' ) }
               </label>
-              { hintKey && <p className="dsc-hint">{ t( hintKey ) }</p> }
+              <p className="dsc-hint">{ t( 'w2-other-hint' ) }</p>
               <CurrencyInput
-                id={ `dsc-${ field }` }
-                value={ state[ field ] }
-                onChange={ v => dispatch( { type: 'SET_FIELD', field, value: v } ) }
+                id="dsc-other-expenses"
+                value={ state.otherExpenses }
+                onChange={ v => dispatch( { type: 'SET_FIELD', field: 'otherExpenses', value: v } ) }
                 placeholder="0"
               />
             </div>
-          ) ) }
-        </div>
-
-        {/* Other expenses (full width) */}
-        <div className="dsc-field">
-          <label className="dsc-label" htmlFor="dsc-other-expenses">
-            { t( 'w2-other' ) }
-          </label>
-          <p className="dsc-hint">{ t( 'w2-other-hint' ) }</p>
-          <CurrencyInput
-            id="dsc-other-expenses"
-            value={ state.otherExpenses }
-            onChange={ v => dispatch( { type: 'SET_FIELD', field: 'otherExpenses', value: v } ) }
-            placeholder="0"
-          />
-        </div>
+          </>
+        ) }
 
         {/* Live summary */}
         <div className="dsc-summary-box" aria-live="polite">

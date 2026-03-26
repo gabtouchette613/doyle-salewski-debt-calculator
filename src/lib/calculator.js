@@ -88,21 +88,21 @@ export function calcResults(inp) {
   // ── Consumer Proposal ──────────────────────────────────────────
   // Settle ~30% of principal, 0% interest, 60 months
   // Note: actual % determined by LIT consultation
-  const PROPOSAL_RATE = 0.30;
+  const PROPOSAL_RATE = window.dsCalcData?.proposalRate ?? 0.30;
   const pTotal   = Math.round(debt * PROPOSAL_RATE);
   const pMonths  = 60;
   const pPayment = Math.round(pTotal / pMonths);
 
   // ── Debt Management Plan ───────────────────────────────────────
   // 100% principal, 0% interest (negotiated), 5% admin fee, 60 months
-  const DMP_ADMIN_FEE = 0.055;
+  const DMP_ADMIN_FEE = window.dsCalcData?.dmpAdminFee  ?? 0.055;
   const dmpTotal   = Math.round(debt * (1 + DMP_ADMIN_FEE));
   const dmpMonths  = 60;
   const dmpPayment = Math.round(dmpTotal / dmpMonths);
 
   // ── Consolidation Loan ─────────────────────────────────────────
   // 16.99% APR, 60 months, requires 650+ credit score
-  const CONS_RATE   = 0.1699;
+  const CONS_RATE   = window.dsCalcData?.consRate      ?? 0.1699;
   const cR          = CONS_RATE / 12;
   const cN          = 60;
   const consPayment = Math.round(
