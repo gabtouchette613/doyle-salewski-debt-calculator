@@ -2,7 +2,7 @@ import { useState } from '@wordpress/element';
 import { getT } from '../lib/i18n';
 import { fmtC } from '../lib/calculator';
 
-const GATED_IDS = new Set(['proposal', 'dmp']);
+const GATED_IDS = new Set(['proposal']);
 
 export default function PaymentCards({ results, lang }) {
   const t = getT(lang);
