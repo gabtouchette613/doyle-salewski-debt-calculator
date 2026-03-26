@@ -172,7 +172,7 @@ export default function DebtAssessmentReport( { results, lang, onReset, onSavePD
         <div className="dsc-report-row">
           <span className="dsc-report-row-lbl">{ t( 'rep-table-nothing' ) }</span>
           <span className="dsc-report-row-val dsc-val-danger">
-            { `${ fmtC( nothing.total ) }\u00a0\u00b7\u00a0${ nothingYears }\u00a0${ t( 'rep-nothing-years' ) }` }
+            { `${ fmtC( nothing.total ) } · ${ nothingYears } ${ t( 'rep-nothing-years' ) }` }
           </span>
         </div>
       </div>
