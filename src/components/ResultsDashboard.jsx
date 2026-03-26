@@ -18,25 +18,26 @@ const SECTION_IDS = [
 export default function ResultsDashboard( { results, lang, onReset } ) {
   const t = getT( lang );
   const [ activeSection, setActiveSection ] = useState( 0 );
+  const [ unlocked,      setUnlocked      ] = useState( false );
+
+  function handleUnlock() {
+    setUnlocked( true );
+  }
 
   useEffect( () => {
-    const observers = [];
-    SECTION_IDS.forEach( ( id, index ) => {
-      const el = document.getElementById( id );
-      if ( ! el ) return;
-      const obs = new IntersectionObserver(
-        ( [ entry ] ) => {
-          if ( entry.isIntersecting ) setActiveSection( index );
-        },
-        {
-          threshold: 0.15,
-          rootMargin: '-100px 0px -20% 0px',
-        }
-      );
-      obs.observe( el );
-      observers.push( obs );
-    } );
-    return () => observers.forEach( obs => obs.disconnect() );
+    function onScroll() {
+      const OFFSET = 140;
+      const distances = SECTION_IDS.map( id => {
+        const el = document.getElementById( id );
+        if ( ! el ) return Infinity;
+        return Math.abs( el.getBoundingClientRect().top - OFFSET );
+      } );
+      const closest = distances.indexOf( Math.min( ...distances ) );
+      if ( closest !== -1 ) setActiveSection( closest );
+    }
+    window.addEventListener( 'scroll', onScroll, { passive: true } );
+    onScroll();
+    return () => window.removeEventListener( 'scroll', onScroll );
   }, [] );
 
   function scrollToSection( index ) {
@@ -83,11 +84,11 @@ export default function ResultsDashboard( { results, lang, onReset } ) {
           </section>
 
           <section id="dsc-section-payments" className="dsc-section">
-            <PaymentCards results={ results } lang={ lang } />
+            <PaymentCards results={ results } lang={ lang } unlocked={ unlocked } onUnlock={ handleUnlock } />
           </section>
 
           <section id="dsc-section-options" className="dsc-section">
-            <OptionsDetail results={ results } lang={ lang } />
+            <OptionsDetail results={ results } lang={ lang } unlocked={ unlocked } onUnlock={ handleUnlock } />
           </section>
 
           <section id="dsc-section-cta" className="dsc-section">

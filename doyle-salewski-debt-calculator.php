@@ -3,7 +3,7 @@
  * Plugin Name:       Doyle Salewski Debt Relief Calculator
  * Plugin URI:        https://doylesalewski.ca
  * Description:       Interactive Canadian debt relief calculator with bilingual support and lead capture.
- * Version:           1.0.14
+ * Version:           1.0.15
  * Author:            Doyle Salewski LIT
  * Author URI:        https://doylesalewski.ca
  * License:           GPL v2 or later
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DS_CALC_VERSION', '1.0.14' );
+define( 'DS_CALC_VERSION', '1.0.15' );
 define( 'DS_CALC_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DS_CALC_URL', plugin_dir_url( __FILE__ ) );
 
@@ -30,14 +30,10 @@ function ds_calc_shortcode() {
 		if ( file_exists( $asset_file ) ) {
 			$asset = include $asset_file;
 
-			wp_enqueue_script( 'ds-calc-chartjs',     DS_CALC_URL . 'assets/vendor/chart.umd.min.js',     [], '4.4.1', true );
-			wp_enqueue_script( 'ds-calc-html2canvas', DS_CALC_URL . 'assets/vendor/html2canvas.min.js',  [], '1.4.1', true );
-			wp_enqueue_script( 'ds-calc-jspdf',       DS_CALC_URL . 'assets/vendor/jspdf.umd.min.js',    [], '2.5.1', true );
-
 			wp_enqueue_script(
 				'ds-debt-calc',
 				DS_CALC_URL . 'build/index.js',
-				array_merge( $asset['dependencies'], [ 'ds-calc-chartjs', 'ds-calc-html2canvas', 'ds-calc-jspdf' ] ),
+				$asset['dependencies'],
 				$asset['version'],
 				true
 			);
@@ -53,9 +49,6 @@ function ds_calc_shortcode() {
 				'emailTo'      => get_option( 'ds_calc_email_to', get_option( 'admin_email' ) ),
 				'crmWebhook'   => get_option( 'ds_calc_crm_webhook', '' ),
 				'logoUrl'      => DS_CALC_URL . 'assets/images/ds-logo.png',
-				'proposalRate' => (float) get_option( 'ds_calc_proposal_rate', 0.30 ),
-				'dmpAdminFee'  => (float) get_option( 'ds_calc_dmp_fee',       0.055 ),
-				'consRate'     => (float) get_option( 'ds_calc_cons_rate',     0.1699 ),
 				'version'      => DS_CALC_VERSION,
 			] );
 
@@ -100,11 +93,22 @@ function ds_calc_register_rest_routes() {
 		'callback'            => 'ds_calc_handle_lead',
 		'permission_callback' => '__return_true',
 		'args'                => [
-			'name'     => [ 'sanitize_callback' => 'sanitize_text_field' ],
-			'phone'    => [ 'sanitize_callback' => 'sanitize_text_field' ],
-			'email'    => [ 'sanitize_callback' => 'sanitize_email' ],
-			'debt'     => [ 'sanitize_callback' => 'absint' ],
-			'province' => [ 'sanitize_callback' => 'sanitize_text_field' ],
+			'name'                 => [ 'sanitize_callback' => 'sanitize_text_field' ],
+			'phone'                => [ 'sanitize_callback' => 'sanitize_text_field' ],
+			'email'                => [ 'sanitize_callback' => 'sanitize_email'      ],
+			'debt'                 => [ 'sanitize_callback' => 'absint'              ],
+			'province'             => [ 'sanitize_callback' => 'sanitize_text_field' ],
+			'income'               => [ 'sanitize_callback' => 'absint'              ],
+			'expenses'             => [ 'sanitize_callback' => 'absint'              ],
+			'surplus'              => [ 'sanitize_callback' => 'absint'              ],
+			'dti'                  => [ 'sanitize_callback' => 'absint'              ],
+			'call_time'            => [ 'sanitize_callback' => 'sanitize_text_field' ],
+			'recommended_payment'  => [ 'sanitize_callback' => 'absint'              ],
+			'recommended_total'    => [ 'sanitize_callback' => 'absint'              ],
+			'lang'                 => [ 'sanitize_callback' => 'sanitize_text_field' ],
+			'annual_rate'          => [ 'type' => 'number'                           ],
+			'is_advanced'          => [ 'type' => 'boolean'                          ],
+			'website'              => [ 'sanitize_callback' => 'sanitize_text_field' ],
 		],
 	] );
 }
@@ -119,23 +123,43 @@ function ds_calc_handle_lead( WP_REST_Request $request ) {
 		return new WP_Error( 'spam', __( 'Blocked.', 'ds-debt-calc' ), [ 'status' => 403 ] );
 	}
 
-	$name     = $request->get_param( 'name' )     ?? '';
-	$phone    = $request->get_param( 'phone' )    ?? '';
-	$email    = $request->get_param( 'email' )    ?? '';
-	$debt     = $request->get_param( 'debt' )     ?? 0;
-	$province = $request->get_param( 'province' ) ?? '';
+	$name                 = sanitize_text_field( $request->get_param( 'name' )                 ?? '' );
+	$phone                = sanitize_text_field( $request->get_param( 'phone' )                ?? '' );
+	$email                = sanitize_email(      $request->get_param( 'email' )                ?? '' );
+	$debt                 = absint(              $request->get_param( 'debt' )                 ?? 0  );
+	$province             = sanitize_text_field( $request->get_param( 'province' )             ?? '' );
+	$income               = absint(              $request->get_param( 'income' )               ?? 0  );
+	$expenses             = absint(              $request->get_param( 'expenses' )             ?? 0  );
+	$surplus              = absint(              $request->get_param( 'surplus' )              ?? 0  );
+	$dti                  = absint(              $request->get_param( 'dti' )                  ?? 0  );
+	$call_time            = sanitize_text_field( $request->get_param( 'call_time' )            ?? '' );
+	$recommended_payment  = absint(              $request->get_param( 'recommended_payment' )  ?? 0  );
+	$recommended_total    = absint(              $request->get_param( 'recommended_total' )    ?? 0  );
+	$lang                 = sanitize_text_field( $request->get_param( 'lang' )                 ?? 'en' );
+	$annual_rate          = (float)              $request->get_param( 'annual_rate' );
+	$is_advanced          = (bool)               $request->get_param( 'is_advanced' );
 
 	$post_id = wp_insert_post( [
 		'post_type'   => 'ds_calc_lead',
 		'post_title'  => sanitize_text_field( $name ?: $email ?: 'Calculator Lead' ),
 		'post_status' => 'publish',
 		'meta_input'  => [
-			'_ds_lead_name'     => $name,
-			'_ds_lead_phone'    => $phone,
-			'_ds_lead_email'    => $email,
-			'_ds_lead_debt'     => $debt,
-			'_ds_lead_province' => $province,
-			'_ds_lead_date'     => current_time( 'mysql' ),
+			'_ds_lead_name'                => $name,
+			'_ds_lead_phone'               => $phone,
+			'_ds_lead_email'               => $email,
+			'_ds_lead_debt'                => $debt,
+			'_ds_lead_province'            => $province,
+			'_ds_lead_income'              => $income,
+			'_ds_lead_expenses'            => $expenses,
+			'_ds_lead_surplus'             => $surplus,
+			'_ds_lead_dti'                 => $dti,
+			'_ds_lead_call_time'           => $call_time,
+			'_ds_lead_recommended_payment' => $recommended_payment,
+			'_ds_lead_recommended_total'   => $recommended_total,
+			'_ds_lead_lang'                => $lang,
+			'_ds_lead_annual_rate'         => $annual_rate,
+			'_ds_lead_is_advanced'         => $is_advanced ? '1' : '0',
+			'_ds_lead_date'                => current_time( 'mysql' ),
 		],
 	] );
 
@@ -143,24 +167,50 @@ function ds_calc_handle_lead( WP_REST_Request $request ) {
 		return new WP_Error( 'insert_failed', __( 'Failed to save lead.', 'ds-debt-calc' ), [ 'status' => 500 ] );
 	}
 
-	// Send notification email
+	// Notification email
 	$email_to = get_option( 'ds_calc_email_to', get_option( 'admin_email' ) );
 	if ( $email_to ) {
-		wp_mail(
-			$email_to,
-			sprintf( __( 'New Calculator Lead: %s', 'ds-debt-calc' ), $name ?: $email ),
-			sprintf(
-				"Name: %s\nPhone: %s\nEmail: %s\nDebt: $%s\nProvince: %s",
-				$name, $phone, $email, number_format( $debt ), $province
-			)
+		$subject = sprintf( __( 'New Calculator Lead: %s', 'ds-debt-calc' ), $name ?: $email );
+		$body    = sprintf(
+			"Name: %s\nPhone: %s\nEmail: %s\nDebt: $%s\nIncome: $%s/mo\nExpenses: $%s/mo\nSurplus: $%s/mo\nDTI: %s%%\nProvince: %s\nRecommended: $%s/mo (total $%s)\nCall time: %s\nLanguage: %s",
+			$name,
+			$phone,
+			$email,
+			number_format( $debt ),
+			number_format( $income ),
+			number_format( $expenses ),
+			number_format( $surplus ),
+			$dti,
+			$province,
+			number_format( $recommended_payment ),
+			number_format( $recommended_total ),
+			$call_time,
+			$lang
 		);
+		wp_mail( $email_to, $subject, $body );
 	}
 
-	// Forward to CRM webhook if configured
+	// CRM webhook
 	$webhook = get_option( 'ds_calc_crm_webhook', '' );
 	if ( $webhook ) {
 		wp_remote_post( $webhook, [
-			'body'    => wp_json_encode( compact( 'name', 'phone', 'email', 'debt', 'province' ) ),
+			'body'    => wp_json_encode( [
+				'name'                => $name,
+				'phone'               => $phone,
+				'email'               => $email,
+				'debt'                => $debt,
+				'province'            => $province,
+				'income'              => $income,
+				'expenses'            => $expenses,
+				'surplus'             => $surplus,
+				'dti'                 => $dti,
+				'call_time'            => $call_time,
+				'recommended_payment'  => $recommended_payment,
+				'recommended_total'    => $recommended_total,
+				'lang'                 => $lang,
+				'annual_rate'          => $annual_rate,
+				'is_advanced'          => $is_advanced,
+			] ),
 			'headers' => [ 'Content-Type' => 'application/json' ],
 			'timeout' => 5,
 		] );
@@ -192,9 +242,6 @@ function ds_calc_settings_page() {
 		update_option( 'ds_calc_phone',        sanitize_text_field( $_POST['ds_calc_phone']        ?? '' ) );
 		update_option( 'ds_calc_email_to',     sanitize_email(      $_POST['ds_calc_email_to']     ?? '' ) );
 		update_option( 'ds_calc_crm_webhook',  esc_url_raw(         $_POST['ds_calc_crm_webhook']  ?? '' ) );
-		update_option( 'ds_calc_proposal_rate', (float) ( $_POST['ds_calc_proposal_rate'] ?? 0.30 ) );
-		update_option( 'ds_calc_dmp_fee',       (float) ( $_POST['ds_calc_dmp_fee']       ?? 0.055 ) );
-		update_option( 'ds_calc_cons_rate',     (float) ( $_POST['ds_calc_cons_rate']     ?? 0.1699 ) );
 		echo '<div class="updated"><p>' . esc_html__( 'Settings saved.', 'ds-debt-calc' ) . '</p></div>';
 	}
 
@@ -202,9 +249,6 @@ function ds_calc_settings_page() {
 	$phone         = esc_attr( get_option( 'ds_calc_phone',        '(613) 237-5555' ) );
 	$email_to      = esc_attr( get_option( 'ds_calc_email_to',     get_option( 'admin_email' ) ) );
 	$crm_webhook   = esc_attr( get_option( 'ds_calc_crm_webhook',  '' ) );
-	$proposal_rate = esc_attr( get_option( 'ds_calc_proposal_rate', '0.30' ) );
-	$dmp_fee       = esc_attr( get_option( 'ds_calc_dmp_fee',       '0.055' ) );
-	$cons_rate     = esc_attr( get_option( 'ds_calc_cons_rate',     '0.1699' ) );
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Debt Calculator Settings', 'ds-debt-calc' ); ?></h1>
@@ -226,18 +270,6 @@ function ds_calc_settings_page() {
 				<tr>
 					<th><label for="ds_calc_crm_webhook"><?php esc_html_e( 'CRM Webhook URL', 'ds-debt-calc' ); ?></label></th>
 					<td><input type="url" id="ds_calc_crm_webhook" name="ds_calc_crm_webhook" value="<?php echo $crm_webhook; ?>" class="regular-text" /></td>
-				</tr>
-				<tr>
-					<th><label for="ds_calc_proposal_rate"><?php esc_html_e( 'Consumer Proposal Rate', 'ds-debt-calc' ); ?></label></th>
-					<td><input type="number" step="0.01" min="0" max="1" id="ds_calc_proposal_rate" name="ds_calc_proposal_rate" value="<?php echo $proposal_rate; ?>" class="small-text" /><p class="description"><?php esc_html_e( 'Default: 0.30 (30% of debt settled). Range: 0.20–0.60.', 'ds-debt-calc' ); ?></p></td>
-				</tr>
-				<tr>
-					<th><label for="ds_calc_dmp_fee"><?php esc_html_e( 'DMP Admin Fee', 'ds-debt-calc' ); ?></label></th>
-					<td><input type="number" step="0.001" min="0" max="0.5" id="ds_calc_dmp_fee" name="ds_calc_dmp_fee" value="<?php echo $dmp_fee; ?>" class="small-text" /><p class="description"><?php esc_html_e( 'Default: 0.055 (5.5%).', 'ds-debt-calc' ); ?></p></td>
-				</tr>
-				<tr>
-					<th><label for="ds_calc_cons_rate"><?php esc_html_e( 'Consolidation Loan APR', 'ds-debt-calc' ); ?></label></th>
-					<td><input type="number" step="0.0001" min="0" max="1" id="ds_calc_cons_rate" name="ds_calc_cons_rate" value="<?php echo $cons_rate; ?>" class="small-text" /><p class="description"><?php esc_html_e( 'Default: 0.1699 (16.99%).', 'ds-debt-calc' ); ?></p></td>
 				</tr>
 			</table>
 			<p class="submit">

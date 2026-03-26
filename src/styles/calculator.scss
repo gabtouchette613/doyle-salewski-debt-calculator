@@ -596,6 +596,7 @@
     max-width: 860px;
     margin: 0 auto;
     padding: 0 16px;
+    overflow-x: clip;
   }
 
   .dsc-btn-outline {
@@ -631,8 +632,8 @@
     gap: 0;
 
     @media (min-width: 768px) {
-      grid-template-columns: 210px 1fr;
-      gap: 24px;
+      grid-template-columns: 210px minmax(0, 1fr);
+      gap: 0;
       align-items: start;
     }
   }
@@ -994,16 +995,24 @@
     flex-shrink: 0;
   }
 
+  .dsc-report-action-btn--pdf-hide {
+    display: none;
+
+    @media (min-width: 480px) {
+      display: inline-flex;
+    }
+  }
+
   .dsc-report-metrics {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     padding: 14px 16px;
     background: var(--dsc-gray-50);
     border-bottom: 1px solid var(--dsc-gray-200);
 
-    @media (min-width: 480px) {
-      grid-template-columns: repeat(4, 1fr);
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 
@@ -1012,6 +1021,8 @@
     border: 1px solid var(--dsc-gray-200);
     border-radius: var(--dsc-radius-md);
     padding: 14px 14px 12px;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .dsc-report-metric-top {
@@ -1063,10 +1074,14 @@
   }
 
   .dsc-report-rows {
-    margin: 16px 20px;
+    margin: 12px 8px;
     border: 1px solid var(--dsc-gray-200);
     border-radius: var(--dsc-radius-md);
     overflow: hidden;
+
+    @media (min-width: 480px) {
+      margin: 16px 20px;
+    }
   }
 
   .dsc-report-rows-head {
@@ -1119,8 +1134,9 @@
     font-weight: 700;
     color: var(--dsc-gray-900);
     text-align: right;
-    white-space: nowrap;
+    word-break: break-word;
     flex-shrink: 0;
+    max-width: 52%;
     font-family: var(--dsc-font-body);
 
     .dsc-report-row--total & {
@@ -1251,7 +1267,7 @@
     line-height: 1.55;
     flex: 1;
     font-family: var(--dsc-font-body);
-    min-width: 200px;
+    min-width: 0;
   }
 
   .dsc-report-assumption-link {
@@ -1645,6 +1661,27 @@
     overflow: hidden;
   }
 
+  .dsc-opt-card--gated {
+    position: relative;
+  }
+
+  .dsc-opt-gate-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    z-index: 5;
+    overflow-y: auto;
+  }
+
+  .dsc-opt-gate-overlay .dsc-pay-gate-cta {
+    max-width: 480px;
+    width: 100%;
+    margin: 0;
+  }
+
   .dsc-pay-gate-cta {
     background: linear-gradient(135deg, #eef3ff 0%, #e8f0fe 100%);
     border: 1.5px solid #c7d7fa;
@@ -1653,6 +1690,7 @@
     text-align: center;
     position: relative;
     margin-top: 4px;
+    margin-bottom: 24px;
   }
 
   .dsc-pay-gate-title {

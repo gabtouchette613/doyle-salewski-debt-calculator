@@ -4,10 +4,9 @@ import { fmtC } from '../lib/calculator';
 
 const GATED_IDS = new Set(['proposal']);
 
-export default function PaymentCards({ results, lang }) {
+export default function PaymentCards({ results, lang, unlocked, onUnlock }) {
   const t = getT(lang);
 
-  const [unlocked,    setUnlocked]    = useState(false);
   const [unlockEmail, setUnlockEmail] = useState('');
   const [unlockName,  setUnlockName]  = useState('');
   const [unlockError, setUnlockError] = useState('');
@@ -49,7 +48,7 @@ export default function PaymentCards({ results, lang }) {
       });
     } catch (_) {}
     setUnlocking(false);
-    setUnlocked(true);
+    onUnlock();
   }
 
   const DISPLAY_ORDER = ['proposal', 'dmp', 'consolidation', 'nothing'];

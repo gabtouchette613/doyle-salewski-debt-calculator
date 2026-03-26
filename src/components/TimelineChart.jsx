@@ -85,12 +85,12 @@ export default function TimelineChart({ results, lang }) {
               </div>
 
               <div className="dsc-tl-track">
+                {/* TODAY marker — first row only */}
                 {index === 0 && (
                   <div className="dsc-tl-today">
                     <div className="dsc-tl-today-lbl">Today</div>
                   </div>
                 )}
-
                 <div
                   className="dsc-tl-fill"
                   style={{

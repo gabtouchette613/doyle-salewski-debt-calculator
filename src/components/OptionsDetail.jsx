@@ -1,3 +1,4 @@
+import { useState } from '@wordpress/element';
 import { getT } from '../lib/i18n';
 import { fmtC } from '../lib/calculator';
 
@@ -84,8 +85,52 @@ function getDetailRows( id, opt, results, t ) {
   }
 }
 
-export default function OptionsDetail( { results, lang } ) {
+export default function OptionsDetail( { results, lang, unlocked, onUnlock } ) {
   const t = getT( lang );
+
+  const [ unlockEmail, setUnlockEmail ] = useState( '' );
+  const [ unlockName,  setUnlockName  ] = useState( '' );
+  const [ unlockError, setUnlockError ] = useState( '' );
+  const [ unlocking,   setUnlocking   ] = useState( false );
+  const [ trap,        setTrap        ] = useState( '' );
+
+  async function handleUnlock() {
+    if ( ! unlockEmail.trim() || ! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( unlockEmail ) ) {
+      setUnlockError( t( 'pay-unlock-email-error' ) );
+      return;
+    }
+    setUnlockError( '' );
+    setUnlocking( true );
+    const restUrl   = window.dsCalcData?.restUrl   ?? '';
+    const restNonce = window.dsCalcData?.restNonce ?? '';
+    const proposal  = results.options.find( o => o.id === 'proposal' );
+    try {
+      await fetch( `${ restUrl }lead`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': restNonce },
+        body: JSON.stringify( {
+          name:                unlockName,
+          email:               unlockEmail,
+          phone:               '',
+          call_time:           'morning',
+          website:             trap,
+          debt:                results.debt,
+          income:              results.income,
+          expenses:            results.expenses,
+          province:            results.province,
+          surplus:             results.surplus,
+          dti:                 results.dti,
+          annual_rate:         results.annualRate,
+          is_advanced:         results.isAdvancedRate,
+          recommended_payment: proposal?.payment ?? 0,
+          recommended_total:   proposal?.total   ?? 0,
+          lang,
+        } ),
+      } );
+    } catch ( _ ) {}
+    setUnlocking( false );
+    onUnlock();
+  }
 
   return (
     <div className="dsc-opt-section">
@@ -108,6 +153,7 @@ export default function OptionsDetail( { results, lang } ) {
 
         const isNothing  = config.id === 'nothing';
         const isRec      = config.variant === 'recommended';
+        const isGated    = isRec && ! unlocked;
         const years      = Math.round( opt.months / 12 );
         const yearsStr   = years === 1
           ? `1 ${ t( 'tl-year' ) }`
@@ -120,10 +166,10 @@ export default function OptionsDetail( { results, lang } ) {
         return (
           <div
             key={ config.id }
-            className={ `dsc-opt-card dsc-opt-card--${ config.variant }` }
+            className={ `dsc-opt-card dsc-opt-card--${ config.variant }${ isGated ? ' dsc-opt-card--gated' : '' }` }
             style={ { borderLeftColor: config.accentColor } }
           >
-            <div className="dsc-opt-card-inner">
+            <div className={ `dsc-opt-card-inner${ isGated ? ' dsc-blurred' : '' }` }>
 
               <div className="dsc-opt-card-hdr">
                 <div className="dsc-opt-card-hdr-left">
@@ -239,6 +285,52 @@ export default function OptionsDetail( { results, lang } ) {
               </div>
 
             </div>
+
+            { isGated && (
+              <div className="dsc-opt-gate-overlay">
+                <div className="dsc-pay-gate-cta">
+                  <p className="dsc-pay-gate-title">{ t( 'pay-unlock-title' ) }</p>
+                  <p className="dsc-pay-gate-sub">{ t( 'pay-unlock-sub' ) }</p>
+
+                  <div aria-hidden="true" style={ { position: 'absolute', left: '-9999px', height: '1px', overflow: 'hidden' } }>
+                    <input type="text" name="website" value={ trap } onChange={ e => setTrap( e.target.value ) } tabIndex={ -1 } autoComplete="off" />
+                  </div>
+
+                  <div className="dsc-pay-gate-fields">
+                    <input
+                      className="dsc-pay-gate-input"
+                      type="text"
+                      value={ unlockName }
+                      onChange={ e => setUnlockName( e.target.value ) }
+                      placeholder={ t( 'pay-unlock-name' ) }
+                    />
+                    <input
+                      className={ `dsc-pay-gate-input${ unlockError ? ' dsc-pay-gate-input--error' : '' }` }
+                      type="email"
+                      inputMode="email"
+                      value={ unlockEmail }
+                      onChange={ e => { setUnlockEmail( e.target.value ); setUnlockError( '' ); } }
+                      placeholder={ t( 'pay-unlock-email' ) }
+                      aria-invalid={ !! unlockError }
+                    />
+                  </div>
+
+                  { unlockError && <p className="dsc-pay-gate-error">{ unlockError }</p> }
+
+                  <button
+                    className="dsc-pay-gate-btn"
+                    type="button"
+                    onClick={ handleUnlock }
+                    disabled={ unlocking }
+                  >
+                    { unlocking ? '...' : t( 'pay-unlock-cta' ) }
+                  </button>
+
+                  <p className="dsc-pay-gate-trust">{ t( 'pay-unlock-trust' ) }</p>
+                </div>
+              </div>
+            ) }
+
           </div>
         );
       } ) }

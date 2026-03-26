@@ -78,7 +78,7 @@ export default function DebtAssessmentReport( { results, lang, onReset, onSavePD
             </button>
           ) }
           { onSavePDF && (
-            <button className="dsc-report-action-btn dsc-report-action-btn--primary" type="button" onClick={ onSavePDF }>
+            <button className="dsc-report-action-btn dsc-report-action-btn--primary dsc-report-action-btn--pdf-hide" type="button" onClick={ onSavePDF }>
               { t( 'r-save-pdf' ) }
             </button>
           ) }
@@ -217,13 +217,6 @@ export default function DebtAssessmentReport( { results, lang, onReset, onSavePD
             : t( 'rep-assumption-est' ).replace( '{rate}', rateStr )
           }
         </span>
-        <button
-          className="dsc-report-assumption-link"
-          type="button"
-          onClick={ () => {} }
-        >
-          { t( 'rep-assumption-refine' ) }
-        </button>
       </div>
 
     </div>
