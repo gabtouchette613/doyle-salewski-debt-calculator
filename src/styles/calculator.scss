@@ -669,8 +669,13 @@
       flex-direction: column;
       gap: 12px;
       position: sticky;
-      top: 90px;
+      top: 154px;
       align-self: start;
+      max-height: calc(100vh - 174px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      &::-webkit-scrollbar { display: none; }
     }
   }
 
