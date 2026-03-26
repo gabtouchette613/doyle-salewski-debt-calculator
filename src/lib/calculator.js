@@ -3,6 +3,19 @@
  * Zero imports. Zero framework dependencies. Named exports only.
  */
 
+export function getDebtTypeRates() {
+  const d = window.dsCalcData ?? {};
+  return {
+    'credit-card': d.rateCreditCard ?? 0.1999,
+    'loc':         d.rateLoc        ?? 0.0850,
+    'cra':         d.rateCra        ?? 0.0900,
+    'student':     d.rateStudent    ?? 0.0750,
+    'payday':      d.ratePayday     ?? 0.2999,
+    'personal':    d.ratePersonal   ?? 0.1499,
+    'other':       d.rateOther      ?? 0.1999,
+  };
+}
+
 export const DEBT_TYPE_RATES = {
   'credit-card': 0.1999,
   'loc':         0.0850,
@@ -20,7 +33,8 @@ export const DEBT_TYPE_RATES = {
  * @returns {number} weighted annual rate as decimal
  */
 export function calcBlendedRate(debtItems) {
-  const DEFAULT_RATE = 0.2199;
+  const rates = getDebtTypeRates();
+  const DEFAULT_RATE = window.dsCalcData?.defaultRate ?? 0.2199;
   if (!debtItems || debtItems.length === 0) return DEFAULT_RATE;
 
   const validItems = debtItems.filter(d => d.amount > 0);
@@ -30,7 +44,7 @@ export function calcBlendedRate(debtItems) {
   if (totalDebt === 0) return DEFAULT_RATE;
 
   const weightedSum = validItems.reduce((sum, d) => {
-    const rate = DEBT_TYPE_RATES[d.type] ?? DEFAULT_RATE;
+    const rate = rates[d.type] ?? DEFAULT_RATE;
     return sum + (d.amount * rate);
   }, 0);
 
@@ -69,9 +83,12 @@ export function calcResults(inp) {
 
   const yr = new Date().getFullYear();
 
+  // ── Configurable rates and terms (from WP admin, with hardcoded fallbacks)
+  const d = window.dsCalcData ?? {};
+
   // ── Do Nothing ─────────────────────────────────────────────────
   // Simulate actual month-by-month minimum payment amortization
-  const MIN_PMT_PCT = 0.025;
+  const MIN_PMT_PCT = d.minPmtPct ?? 0.025;
   let nBal = debt, nPaid = 0, nInterestPaid = 0, nMonths = 0;
   while (nBal > 0.5 && nMonths < 600) {
     const int = nBal * monthlyRate;
@@ -88,23 +105,23 @@ export function calcResults(inp) {
   // ── Consumer Proposal ──────────────────────────────────────────
   // Settle ~30% of principal, 0% interest, 60 months
   // Note: actual % determined by LIT consultation
-  const PROPOSAL_RATE = window.dsCalcData?.proposalRate ?? 0.30;
-  const pTotal   = Math.round(debt * PROPOSAL_RATE);
-  const pMonths  = 60;
-  const pPayment = Math.round(pTotal / pMonths);
+  const PROPOSAL_RATE = d.proposalRate   ?? 0.30;
+  const pTotal        = Math.round(debt * PROPOSAL_RATE);
+  const pMonths       = d.proposalMonths ?? 60;
+  const pPayment      = Math.round(pTotal / pMonths);
 
   // ── Debt Management Plan ───────────────────────────────────────
   // 100% principal, 0% interest (negotiated), 5% admin fee, 60 months
-  const DMP_ADMIN_FEE = window.dsCalcData?.dmpAdminFee  ?? 0.055;
-  const dmpTotal   = Math.round(debt * (1 + DMP_ADMIN_FEE));
-  const dmpMonths  = 60;
-  const dmpPayment = Math.round(dmpTotal / dmpMonths);
+  const DMP_ADMIN_FEE = d.dmpAdminFee ?? 0.055;
+  const dmpTotal      = Math.round(debt * (1 + DMP_ADMIN_FEE));
+  const dmpMonths     = d.dmpMonths   ?? 60;
+  const dmpPayment    = Math.round(dmpTotal / dmpMonths);
 
   // ── Consolidation Loan ─────────────────────────────────────────
   // 16.99% APR, 60 months, requires 650+ credit score
-  const CONS_RATE     = window.dsCalcData?.consRate      ?? 0.1699;
+  const CONS_RATE   = d.consRate   ?? 0.1699;
   const cR          = CONS_RATE / 12;
-  const cN          = 60;
+  const cN          = d.consMonths ?? 60;
   const consPayment = Math.round(
     (debt * cR * Math.pow(1 + cR, cN)) / (Math.pow(1 + cR, cN) - 1)
   );
@@ -134,7 +151,7 @@ export function calcResults(inp) {
       total:                pTotal,
       months:               pMonths,
       payment:              pPayment,
-      year:                 yr + 5,
+      year:                 yr + Math.ceil(pMonths / 12),
       savings:              nTotal - pTotal,
       interestPaid:         0,
       principalPerPayment:  pPayment,
@@ -150,7 +167,7 @@ export function calcResults(inp) {
       total:                dmpTotal,
       months:               dmpMonths,
       payment:              dmpPayment,
-      year:                 yr + 5,
+      year:                 yr + Math.ceil(dmpMonths / 12),
       savings:              nTotal - dmpTotal,
       interestPaid:         0,
       principalPerPayment:  dmpPayment,
@@ -165,7 +182,7 @@ export function calcResults(inp) {
       total:                consTotal,
       months:               cN,
       payment:              consPayment,
-      year:                 yr + 5,
+      year:                 yr + Math.ceil(cN / 12),
       savings:              nTotal - consTotal,
       interestPaid:         consInterest,
       principalPerPayment:  Math.round(debt / cN),

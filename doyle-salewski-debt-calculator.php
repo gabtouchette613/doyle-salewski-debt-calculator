@@ -3,7 +3,7 @@
  * Plugin Name:       Doyle Salewski Debt Relief Calculator
  * Plugin URI:        https://doylesalewski.ca
  * Description:       Interactive Canadian debt relief calculator with bilingual support and lead capture.
- * Version:           1.0.18
+ * Version:           1.0.19
  * Author:            Doyle Salewski LIT
  * Author URI:        https://doylesalewski.ca
  * License:           GPL v2 or later
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DS_CALC_VERSION', '1.0.18' );
+define( 'DS_CALC_VERSION', '1.0.19' );
 define( 'DS_CALC_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DS_CALC_URL', plugin_dir_url( __FILE__ ) );
 
@@ -50,9 +50,21 @@ function ds_calc_shortcode() {
 				'crmWebhook'   => get_option( 'ds_calc_crm_webhook', '' ),
 				'logoUrl'      => DS_CALC_URL . 'assets/images/ds-logo.png',
 				'version'      => DS_CALC_VERSION,
-				'proposalRate' => (float) get_option( 'ds_calc_proposal_rate', 0.30 ),
-				'dmpAdminFee'  => (float) get_option( 'ds_calc_dmp_fee',       0.055 ),
-				'consRate'     => (float) get_option( 'ds_calc_cons_rate',     0.1699 ),
+				'proposalRate'   => (float) get_option( 'ds_calc_proposal_rate',    0.30 ),
+				'proposalMonths' => (int)   get_option( 'ds_calc_proposal_months', 60 ),
+				'dmpAdminFee'    => (float) get_option( 'ds_calc_dmp_fee',         0.055 ),
+				'dmpMonths'      => (int)   get_option( 'ds_calc_dmp_months',      60 ),
+				'consRate'       => (float) get_option( 'ds_calc_cons_rate',       0.1699 ),
+				'consMonths'     => (int)   get_option( 'ds_calc_cons_months',     60 ),
+				'defaultRate'    => (float) get_option( 'ds_calc_default_rate',    0.2199 ),
+				'minPmtPct'      => (float) get_option( 'ds_calc_min_pmt_pct',    0.025 ),
+				'rateCreditCard' => (float) get_option( 'ds_calc_rate_credit_card', 0.1999 ),
+				'rateLoc'        => (float) get_option( 'ds_calc_rate_loc',         0.0850 ),
+				'rateCra'        => (float) get_option( 'ds_calc_rate_cra',         0.0900 ),
+				'rateStudent'    => (float) get_option( 'ds_calc_rate_student',     0.0750 ),
+				'ratePayday'     => (float) get_option( 'ds_calc_rate_payday',      0.2999 ),
+				'ratePersonal'   => (float) get_option( 'ds_calc_rate_personal',    0.1499 ),
+				'rateOther'      => (float) get_option( 'ds_calc_rate_other',       0.1999 ),
 			] );
 
 			wp_enqueue_style( 'ds-debt-calc', DS_CALC_URL . 'build/index.css', [], $asset['version'] );
@@ -228,6 +240,27 @@ function ds_calc_handle_lead( WP_REST_Request $request ) {
 
 add_action( 'admin_menu', 'ds_calc_register_admin_menu' );
 
+add_action( 'admin_init', 'ds_calc_maybe_export_csv' );
+
+function ds_calc_maybe_export_csv(): void {
+	if (
+		! isset( $_GET['page'] ) ||
+		$_GET['page'] !== 'ds-debt-calculator' ||
+		empty( $_GET['ds_export'] ) ||
+		$_GET['ds_export'] !== '1'
+	) {
+		return;
+	}
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Permission denied.', 'ds-debt-calc' ) );
+	}
+	if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( $_GET['_wpnonce'], 'ds_calc_export' ) ) {
+		wp_die( esc_html__( 'Security check failed.', 'ds-debt-calc' ) );
+	}
+	ds_calc_export_csv();
+	exit;
+}
+
 function ds_calc_register_admin_menu(): void {
 	add_menu_page(
 		__( 'Debt Calculator', 'ds-debt-calc' ),
@@ -329,12 +362,6 @@ function ds_calc_admin_page(): void {
 	if ( isset( $_POST['ds_calc_admin_nonce'] ) ) {
 		ds_calc_save_admin_settings();
 		wp_safe_redirect( add_query_arg( 'settings-updated', '1', wp_get_referer() ) );
-		exit;
-	}
-
-	// Handle CSV export
-	if ( ! empty( $_GET['ds_export'] ) && $_GET['ds_export'] === '1' ) {
-		ds_calc_export_csv();
 		exit;
 	}
 
@@ -578,17 +605,30 @@ function ds_calc_render_leads_tab(): void {
 // ── Settings tab ───────────────────────────────────────────────────────────
 
 function ds_calc_render_settings_tab(): void {
-	$firm_name     = get_option( 'ds_calc_firm_name',    'Doyle Salewski' );
-	$phone         = get_option( 'ds_calc_phone',        '(613) 237-5555' );
-	$email_to      = get_option( 'ds_calc_email_to',     get_option( 'admin_email' ) );
-	$crm_webhook   = get_option( 'ds_calc_crm_webhook',  '' );
-	$proposal_rate = get_option( 'ds_calc_proposal_rate', '0.30' );
-	$dmp_fee       = get_option( 'ds_calc_dmp_fee',       '0.055' );
-	$cons_rate     = get_option( 'ds_calc_cons_rate',     '0.1699' );
+	$firm_name       = get_option( 'ds_calc_firm_name',    'Doyle Salewski' );
+	$phone           = get_option( 'ds_calc_phone',        '(613) 237-5555' );
+	$email_to        = get_option( 'ds_calc_email_to',     get_option( 'admin_email' ) );
+	$crm_webhook     = get_option( 'ds_calc_crm_webhook',  '' );
+	$proposal_rate   = get_option( 'ds_calc_proposal_rate',   '0.30' );
+	$proposal_months = get_option( 'ds_calc_proposal_months', '60' );
+	$dmp_fee         = get_option( 'ds_calc_dmp_fee',         '0.055' );
+	$dmp_months      = get_option( 'ds_calc_dmp_months',      '60' );
+	$cons_rate       = get_option( 'ds_calc_cons_rate',       '0.1699' );
+	$cons_months     = get_option( 'ds_calc_cons_months',     '60' );
+	$default_rate    = get_option( 'ds_calc_default_rate',    '0.2199' );
+	$min_pmt_pct     = get_option( 'ds_calc_min_pmt_pct',    '0.025' );
+	$rate_cc         = get_option( 'ds_calc_rate_credit_card', '0.1999' );
+	$rate_loc        = get_option( 'ds_calc_rate_loc',         '0.0850' );
+	$rate_cra        = get_option( 'ds_calc_rate_cra',         '0.0900' );
+	$rate_student    = get_option( 'ds_calc_rate_student',     '0.0750' );
+	$rate_payday     = get_option( 'ds_calc_rate_payday',      '0.2999' );
+	$rate_personal   = get_option( 'ds_calc_rate_personal',    '0.1499' );
+	$rate_other      = get_option( 'ds_calc_rate_other',       '0.1999' );
 	?>
 	<form method="post" action="">
 		<?php wp_nonce_field( 'ds_calc_save_admin_settings', 'ds_calc_admin_nonce' ); ?>
 
+		<?php // ── Section 1: Firm Settings ───────────────────────────────── ?>
 		<div class="ds-settings-section">
 			<h3><?php esc_html_e( 'Firm Settings', 'ds-debt-calc' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'Displayed in the calculator and notification emails.', 'ds-debt-calc' ); ?></p>
@@ -621,40 +661,176 @@ function ds_calc_render_settings_tab(): void {
 			</table>
 		</div>
 
+		<?php // ── Section 2: Consumer Proposal ──────────────────────────── ?>
 		<div class="ds-settings-section">
-			<h3><?php esc_html_e( 'Calculator Rates', 'ds-debt-calc' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'These values drive the calculator estimates shown to users. Defaults reflect current Canadian averages — only change if you have specific data to support it.', 'ds-debt-calc' ); ?></p>
+			<h3><?php esc_html_e( 'Consumer Proposal', 'ds-debt-calc' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'A legally binding agreement to repay a portion of unsecured debt. Administered by a Licensed Insolvency Trustee.', 'ds-debt-calc' ); ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th><?php esc_html_e( 'Consumer Proposal Settlement', 'ds-debt-calc' ); ?></th>
+					<th><label for="ds_calc_proposal_rate"><?php esc_html_e( 'Settlement Rate', 'ds-debt-calc' ); ?></label></th>
 					<td>
-						<div class="ds-rate-fields">
-							<div class="ds-rate-field">
-								<label for="ds_calc_proposal_rate"><?php esc_html_e( 'Rate (decimal)', 'ds-debt-calc' ); ?></label>
-								<input type="number" id="ds_calc_proposal_rate" name="ds_calc_proposal_rate" value="<?php echo esc_attr( $proposal_rate ); ?>" min="0.10" max="0.80" step="0.01" class="small-text">
-								<span class="description"><?php esc_html_e( 'Default: 0.30 (30% of debt)', 'ds-debt-calc' ); ?></span>
-							</div>
-						</div>
+						<input type="number" id="ds_calc_proposal_rate" name="ds_calc_proposal_rate"
+							value="<?php echo esc_attr( $proposal_rate ); ?>"
+							min="0.10" max="0.80" step="0.01" class="small-text">
+						<p class="description"><?php esc_html_e( 'Decimal. Default: 0.30 (30¢ on the dollar). Typical range: 0.20–0.50.', 'ds-debt-calc' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Debt Management Plan Admin Fee', 'ds-debt-calc' ); ?></th>
+					<th><label for="ds_calc_proposal_months"><?php esc_html_e( 'Term (months)', 'ds-debt-calc' ); ?></label></th>
 					<td>
-						<div class="ds-rate-field">
-							<label for="ds_calc_dmp_fee"><?php esc_html_e( 'Fee (decimal)', 'ds-debt-calc' ); ?></label>
-							<input type="number" id="ds_calc_dmp_fee" name="ds_calc_dmp_fee" value="<?php echo esc_attr( $dmp_fee ); ?>" min="0.01" max="0.20" step="0.001" class="small-text">
-							<span class="description"><?php esc_html_e( 'Default: 0.055 (5.5%)', 'ds-debt-calc' ); ?></span>
-						</div>
+						<input type="number" id="ds_calc_proposal_months" name="ds_calc_proposal_months"
+							value="<?php echo esc_attr( $proposal_months ); ?>"
+							min="12" max="60" step="1" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 60 months (5 years). Maximum allowed by law: 60.', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<?php // ── Section 3: Debt Management Plan ───────────────────────── ?>
+		<div class="ds-settings-section">
+			<h3><?php esc_html_e( 'Debt Management Plan (DMP)', 'ds-debt-calc' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'A voluntary repayment arrangement with creditors through a credit counselling agency. Repays 100% of principal.', 'ds-debt-calc' ); ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><label for="ds_calc_dmp_fee"><?php esc_html_e( 'Admin Fee', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_dmp_fee" name="ds_calc_dmp_fee"
+							value="<?php echo esc_attr( $dmp_fee ); ?>"
+							min="0.01" max="0.20" step="0.001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Decimal. Default: 0.055 (5.5%). Added on top of the principal.', 'ds-debt-calc' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Consolidation Loan Rate', 'ds-debt-calc' ); ?></th>
+					<th><label for="ds_calc_dmp_months"><?php esc_html_e( 'Term (months)', 'ds-debt-calc' ); ?></label></th>
 					<td>
-						<div class="ds-rate-field">
-							<label for="ds_calc_cons_rate"><?php esc_html_e( 'APR (decimal)', 'ds-debt-calc' ); ?></label>
-							<input type="number" id="ds_calc_cons_rate" name="ds_calc_cons_rate" value="<?php echo esc_attr( $cons_rate ); ?>" min="0.05" max="0.30" step="0.0001" class="small-text">
-							<span class="description"><?php esc_html_e( 'Default: 0.1699 (16.99% APR)', 'ds-debt-calc' ); ?></span>
-						</div>
+						<input type="number" id="ds_calc_dmp_months" name="ds_calc_dmp_months"
+							value="<?php echo esc_attr( $dmp_months ); ?>"
+							min="12" max="120" step="1" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 60 months (5 years).', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<?php // ── Section 4: Consolidation Loan ─────────────────────────── ?>
+		<div class="ds-settings-section">
+			<h3><?php esc_html_e( 'Consolidation Loan', 'ds-debt-calc' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'A new loan from a bank or lender used to pay off existing debts. Requires a minimum credit score to qualify.', 'ds-debt-calc' ); ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><label for="ds_calc_cons_rate"><?php esc_html_e( 'Interest Rate (APR)', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_cons_rate" name="ds_calc_cons_rate"
+							value="<?php echo esc_attr( $cons_rate ); ?>"
+							min="0.05" max="0.35" step="0.0001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Decimal. Default: 0.1699 (16.99% APR). Adjust to reflect current market rates.', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_cons_months"><?php esc_html_e( 'Term (months)', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_cons_months" name="ds_calc_cons_months"
+							value="<?php echo esc_attr( $cons_months ); ?>"
+							min="12" max="120" step="1" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 60 months (5 years).', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<?php // ── Section 5: Do Nothing defaults ───────────────────────── ?>
+		<div class="ds-settings-section">
+			<h3><?php esc_html_e( '"Do Nothing" Assumptions', 'ds-debt-calc' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Used to simulate the cost of making only minimum payments indefinitely. Shown as a cautionary reference — not a recommended path.', 'ds-debt-calc' ); ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><label for="ds_calc_default_rate"><?php esc_html_e( 'Default Interest Rate (APR)', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_default_rate" name="ds_calc_default_rate"
+							value="<?php echo esc_attr( $default_rate ); ?>"
+							min="0.05" max="0.50" step="0.0001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Decimal. Default: 0.2199 (21.99% APR). Applied when no debt breakdown is provided. Based on Canadian average unsecured consumer debt rate.', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_min_pmt_pct"><?php esc_html_e( 'Minimum Payment %', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_min_pmt_pct" name="ds_calc_min_pmt_pct"
+							value="<?php echo esc_attr( $min_pmt_pct ); ?>"
+							min="0.01" max="0.10" step="0.001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Decimal. Default: 0.025 (2.5% of balance per month). Industry standard for most Canadian credit cards.', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<?php // ── Section 6: Interest Rates by Debt Type ───────────────── ?>
+		<div class="ds-settings-section">
+			<h3><?php esc_html_e( 'Interest Rates by Debt Type', 'ds-debt-calc' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Used to calculate a blended weighted interest rate when a user provides a detailed debt breakdown. Enter as decimals (e.g. 0.1999 = 19.99% APR).', 'ds-debt-calc' ); ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><label for="ds_calc_rate_credit_card"><?php esc_html_e( 'Credit Card', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_rate_credit_card" name="ds_calc_rate_credit_card"
+							value="<?php echo esc_attr( $rate_cc ); ?>"
+							min="0.05" max="0.50" step="0.0001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 0.1999 (19.99%)', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_rate_loc"><?php esc_html_e( 'Line of Credit', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_rate_loc" name="ds_calc_rate_loc"
+							value="<?php echo esc_attr( $rate_loc ); ?>"
+							min="0.01" max="0.30" step="0.0001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 0.0850 (8.50%)', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_rate_cra"><?php esc_html_e( 'CRA / Tax Debt', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_rate_cra" name="ds_calc_rate_cra"
+							value="<?php echo esc_attr( $rate_cra ); ?>"
+							min="0.01" max="0.30" step="0.0001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 0.0900 (9.00%)', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_rate_student"><?php esc_html_e( 'Student Loan', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_rate_student" name="ds_calc_rate_student"
+							value="<?php echo esc_attr( $rate_student ); ?>"
+							min="0.01" max="0.25" step="0.0001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 0.0750 (7.50%)', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_rate_payday"><?php esc_html_e( 'Payday Loan', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_rate_payday" name="ds_calc_rate_payday"
+							value="<?php echo esc_attr( $rate_payday ); ?>"
+							min="0.10" max="0.60" step="0.0001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 0.2999 (29.99%)', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_rate_personal"><?php esc_html_e( 'Personal Loan', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_rate_personal" name="ds_calc_rate_personal"
+							value="<?php echo esc_attr( $rate_personal ); ?>"
+							min="0.05" max="0.40" step="0.0001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 0.1499 (14.99%)', 'ds-debt-calc' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="ds_calc_rate_other"><?php esc_html_e( 'Other Debt', 'ds-debt-calc' ); ?></label></th>
+					<td>
+						<input type="number" id="ds_calc_rate_other" name="ds_calc_rate_other"
+							value="<?php echo esc_attr( $rate_other ); ?>"
+							min="0.05" max="0.50" step="0.0001" class="small-text">
+						<p class="description"><?php esc_html_e( 'Default: 0.1999 (19.99%)', 'ds-debt-calc' ); ?></p>
 					</td>
 				</tr>
 			</table>
@@ -677,25 +853,41 @@ function ds_calc_save_admin_settings(): void {
 	update_option( 'ds_calc_email_to',    sanitize_email(      wp_unslash( $_POST['ds_calc_email_to']    ?? '' ) ) );
 	update_option( 'ds_calc_crm_webhook', esc_url_raw(         wp_unslash( $_POST['ds_calc_crm_webhook'] ?? '' ) ) );
 
-	$proposal_rate = (float) ( $_POST['ds_calc_proposal_rate'] ?? 0.30 );
-	$dmp_fee       = (float) ( $_POST['ds_calc_dmp_fee']       ?? 0.055 );
-	$cons_rate     = (float) ( $_POST['ds_calc_cons_rate']     ?? 0.1699 );
+	// Proposal
+	update_option( 'ds_calc_proposal_rate',   max( 0.10, min( 0.80, (float) ( $_POST['ds_calc_proposal_rate']   ?? 0.30  ) ) ) );
+	update_option( 'ds_calc_proposal_months', max( 12,   min( 60,   (int)   ( $_POST['ds_calc_proposal_months'] ?? 60    ) ) ) );
 
-	update_option( 'ds_calc_proposal_rate', max( 0.10, min( 0.80,  $proposal_rate ) ) );
-	update_option( 'ds_calc_dmp_fee',       max( 0.01, min( 0.20,  $dmp_fee ) ) );
-	update_option( 'ds_calc_cons_rate',     max( 0.05, min( 0.30,  $cons_rate ) ) );
+	// DMP
+	update_option( 'ds_calc_dmp_fee',    max( 0.01, min( 0.20, (float) ( $_POST['ds_calc_dmp_fee']    ?? 0.055 ) ) ) );
+	update_option( 'ds_calc_dmp_months', max( 12,   min( 120,  (int)   ( $_POST['ds_calc_dmp_months'] ?? 60    ) ) ) );
+
+	// Consolidation
+	update_option( 'ds_calc_cons_rate',   max( 0.05, min( 0.35, (float) ( $_POST['ds_calc_cons_rate']   ?? 0.1699 ) ) ) );
+	update_option( 'ds_calc_cons_months', max( 12,   min( 120,  (int)   ( $_POST['ds_calc_cons_months'] ?? 60     ) ) ) );
+
+	// Do Nothing defaults
+	update_option( 'ds_calc_default_rate', max( 0.05, min( 0.50, (float) ( $_POST['ds_calc_default_rate'] ?? 0.2199 ) ) ) );
+	update_option( 'ds_calc_min_pmt_pct',  max( 0.01, min( 0.10, (float) ( $_POST['ds_calc_min_pmt_pct']  ?? 0.025  ) ) ) );
+
+	// Debt type rates
+	$debt_rate_fields = [
+		'ds_calc_rate_credit_card' => [ 'default' => 0.1999, 'min' => 0.05, 'max' => 0.50 ],
+		'ds_calc_rate_loc'         => [ 'default' => 0.0850, 'min' => 0.01, 'max' => 0.30 ],
+		'ds_calc_rate_cra'         => [ 'default' => 0.0900, 'min' => 0.01, 'max' => 0.30 ],
+		'ds_calc_rate_student'     => [ 'default' => 0.0750, 'min' => 0.01, 'max' => 0.25 ],
+		'ds_calc_rate_payday'      => [ 'default' => 0.2999, 'min' => 0.10, 'max' => 0.60 ],
+		'ds_calc_rate_personal'    => [ 'default' => 0.1499, 'min' => 0.05, 'max' => 0.40 ],
+		'ds_calc_rate_other'       => [ 'default' => 0.1999, 'min' => 0.05, 'max' => 0.50 ],
+	];
+	foreach ( $debt_rate_fields as $key => $cfg ) {
+		$val = (float) ( $_POST[ $key ] ?? $cfg['default'] );
+		update_option( $key, max( $cfg['min'], min( $cfg['max'], $val ) ) );
+	}
 }
 
 // ── CSV export ─────────────────────────────────────────────────────────────
 
 function ds_calc_export_csv(): void {
-	if ( ! current_user_can( 'manage_options' ) ) {
-		wp_die( esc_html__( 'Permission denied.', 'ds-debt-calc' ) );
-	}
-	if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( $_GET['_wpnonce'], 'ds_calc_export' ) ) {
-		wp_die( esc_html__( 'Security check failed.', 'ds-debt-calc' ) );
-	}
-
 	$province_f = sanitize_text_field( $_GET['province'] ?? '' );
 	$lang_f     = sanitize_text_field( $_GET['lang']     ?? '' );
 
