@@ -3,6 +3,7 @@ import { getT } from '../lib/i18n';
 import StepWizard from './StepWizard';
 import CalculatingScreen from './CalculatingScreen';
 import ResultsDashboard from './ResultsDashboard';
+import DeficitScreen from './DeficitScreen';
 
 const lang = ( window.dsCalcData?.locale === 'fr' ) ? 'fr' : 'en';
 export const t = getT( lang );
@@ -123,12 +124,26 @@ export default function Calculator() {
     return (
       <CalculatingScreen
         calcInput={ calcInput }
-        onComplete={ results => dispatch( { type: 'SET_RESULTS', results } ) }
+        onComplete={ results => {
+          const afterInterest = results.income - results.expenses - results.monthlyInterest;
+          results.isDeficit    = afterInterest < 0;
+          results.afterInterest = afterInterest;
+          dispatch( { type: 'SET_RESULTS', results } );
+        } }
       />
     );
   }
 
   if ( state.currentStep === 'results' ) {
+    if ( state.results?.isDeficit ) {
+      return (
+        <DeficitScreen
+          results={ state.results }
+          lang={ lang }
+          onReset={ () => dispatch( { type: 'RESET' } ) }
+        />
+      );
+    }
     return (
       <ResultsDashboard
         results={ state.results }
