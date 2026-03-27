@@ -121,7 +121,8 @@ export default function CTASection({ results, lang }) {
 
       <div className="dsc-cta-phone-strip">
         <div className="dsc-cta-phone-text">
-          <strong>{t('cta-phone-label')}</strong> {t('cta-phone-hours')}
+          <strong>{t('cta-phone-label')}</strong>
+          {t('cta-phone-hours')}
         </div>
         <a
           href={`tel:${firmPhone.replace(/\D/g, '')}`}

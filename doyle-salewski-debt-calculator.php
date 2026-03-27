@@ -3,7 +3,7 @@
  * Plugin Name:       Doyle Salewski Debt Relief Calculator
  * Plugin URI:        https://doylesalewski.ca
  * Description:       Interactive Canadian debt relief calculator with bilingual support and lead capture.
- * Version:           1.0.28
+ * Version:           1.0.29
  * Author:            Doyle Salewski LIT
  * Author URI:        https://doylesalewski.ca
  * License:           GPL v2 or later
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DS_CALC_VERSION', '1.0.28' );
+define( 'DS_CALC_VERSION', '1.0.29' );
 define( 'DS_CALC_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DS_CALC_URL', plugin_dir_url( __FILE__ ) );
 

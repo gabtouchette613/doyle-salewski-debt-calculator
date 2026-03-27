@@ -2387,33 +2387,69 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 14px 22px;
-    background: #fff;
+    gap: 16px;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border: 1px solid var(--dsc-gray-200);
-    border-radius: var(--dsc-radius-md);
+    border-radius: var(--dsc-radius-lg);
     flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--dsc-blue), var(--dsc-blue-light));
+      border-radius: var(--dsc-radius-lg) var(--dsc-radius-lg) 0 0;
+    }
   }
 
   .dsc-cta-phone-text {
-    font-size: 13px;
-    color: var(--dsc-gray-500);
+    font-size: 14px;
+    color: var(--dsc-gray-600);
     font-family: var(--dsc-font-body);
-    line-height: 1.5;
+    line-height: 1.6;
+    flex: 1;
+    min-width: 0;
 
-    strong { color: var(--dsc-gray-900); }
+    strong { 
+      color: var(--dsc-gray-900);
+      font-weight: 700;
+      display: block;
+      margin-bottom: 2px;
+      font-size: 15px;
+    }
   }
 
   .dsc-cta-phone-link {
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 800;
     color: var(--dsc-blue) !important;
     text-decoration: none !important;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.4px;
     white-space: nowrap;
     font-family: var(--dsc-font-title);
+    padding: 10px 20px;
+    background: rgba(16, 97, 237, 0.08);
+    border-radius: var(--dsc-radius-pill);
+    transition: all 0.2s ease;
+    border: 1px solid rgba(16, 97, 237, 0.15);
 
-    &:hover { color: var(--dsc-blue-hover) !important; }
+    &:hover { 
+      color: var(--dsc-blue-hover) !important;
+      background: rgba(16, 97, 237, 0.12);
+      border-color: rgba(16, 97, 237, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(16, 97, 237, 0.2);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
   }
 
   .dsc-modal-overlay {
