@@ -72,7 +72,7 @@ export default function PaymentCards({ results, lang, unlocked, onUnlock }) {
 
   const CARD_NAMES = {
     proposal:      lang === 'fr' ? 'Proposition'   : 'Proposal',
-    dmp:           lang === 'fr' ? 'Gestion'        : 'Debt Mgmt',
+    dmp:           lang === 'fr' ? 'Gestion'        : 'Debt Management',
     consolidation: lang === 'fr' ? 'Consolidation'  : 'Consolidation',
     nothing:       lang === 'fr' ? 'Rien faire'     : 'Do Nothing',
   };

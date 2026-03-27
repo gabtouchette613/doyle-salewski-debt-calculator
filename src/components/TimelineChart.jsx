@@ -12,7 +12,7 @@ const ROWS = [
 
 const OPTION_NAMES = {
   proposal:      { en: 'Consumer Proposal',  fr: 'Proposition de consommateur' },
-  dmp:           { en: 'Debt Mgmt Plan',     fr: 'Plan de gestion de dettes'   },
+  dmp:           { en: 'Debt Management Plan',     fr: 'Plan de gestion de dettes'   },
   consolidation: { en: 'Consolidation Loan', fr: 'Prêt de consolidation'       },
   nothing:       { en: 'Do Nothing',         fr: 'Ne rien faire'               },
 };
