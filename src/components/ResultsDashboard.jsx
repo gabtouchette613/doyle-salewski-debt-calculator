@@ -1,5 +1,6 @@
 import { useState, useEffect } from '@wordpress/element';
 import { getT } from '../lib/i18n';
+import { generatePrintHTML } from '../lib/printPage';
 import ReportNav from './ReportNav';
 import DebtAssessmentReport from './DebtAssessmentReport';
 import TimelineChart        from './TimelineChart';
@@ -47,7 +48,15 @@ export default function ResultsDashboard( { results, lang, onReset } ) {
   }
 
   function handlePDF() {
-    window.print();
+    const html = generatePrintHTML( results, lang );
+    const win  = window.open( '', '_blank' );
+    if ( ! win ) {
+      window.print();
+      return;
+    }
+    win.document.open();
+    win.document.write( html );
+    win.document.close();
   }
 
   return (

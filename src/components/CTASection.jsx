@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from '@wordpress/element';
 import { getT }     from '../lib/i18n';
 import { fmtC }     from '../lib/calculator';
+import { generatePrintHTML } from '../lib/printPage';
 
 export default function CTASection({ results, lang }) {
   const t = getT(lang);
@@ -22,7 +23,15 @@ export default function CTASection({ results, lang }) {
   const restNonce = window.dsCalcData?.restNonce ?? '';
 
   function handleSavePDF() {
-    window.print();
+    const html = generatePrintHTML( results, lang );
+    const win  = window.open( '', '_blank' );
+    if ( ! win ) {
+      window.print();
+      return;
+    }
+    win.document.open();
+    win.document.write( html );
+    win.document.close();
   }
 
   function validate() {
