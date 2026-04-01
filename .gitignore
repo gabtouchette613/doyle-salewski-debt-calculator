@@ -2,5 +2,6 @@ node_modules/
 build/
 *.zip
 *-dist/
+prototypes/
 .DS_Store
 Thumbs.db

@@ -125,14 +125,13 @@ export default function TimelineChart({ results, lang }) {
 
       <div className="dsc-tl-summary">
         <span className="dsc-tl-summary-arrow">→</span>
-        <span dangerouslySetInnerHTML={{
-          __html:
-            `${t('tl-sum-a')} <strong>${propYrs} ${t('opt-years')}</strong> `
-          + `${t('tl-sum-b')} <strong>${fmtC(proposal.total)}</strong>. `
-          + `${t('tl-sum-c')} <strong>${nothYrs} ${t('opt-years')}</strong> `
-          + `${t('tl-sum-d')} <strong>${fmtC(nothing.total)}</strong> — `
-          + `${t('tl-sum-e')} <strong>${fmtC(savedAmt)} ${t('tl-sum-f')}</strong>.`
-        }} />
+        <span>
+          {t('tl-sum-a')} <strong>{propYrs} {t('opt-years')}</strong>{' '}
+          {t('tl-sum-b')} <strong>{fmtC(proposal.total)}</strong>.{' '}
+          {t('tl-sum-c')} <strong>{nothYrs} {t('opt-years')}</strong>{' '}
+          {t('tl-sum-d')} <strong>{fmtC(nothing.total)}</strong>.{' '}
+          {t('tl-sum-e')} <strong>{fmtC(savedAmt)} {t('tl-sum-f')}</strong>.
+        </span>
       </div>
     </div>
   );

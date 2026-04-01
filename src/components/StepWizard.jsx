@@ -159,7 +159,7 @@ function Step1( { state, dispatch, onNext } ) {
             <p className="dsc-adv-hint">{ t( 'w1-adv-hint' ) }</p>
 
             { state.debtItems.map( ( item, i ) => (
-              <div key={ i } className="dsc-debt-row">
+              <div key={ item.id } className="dsc-debt-row">
                 <select
                   className="dsc-select"
                   value={ item.type }

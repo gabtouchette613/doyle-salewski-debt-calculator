@@ -8,6 +8,8 @@ import DeficitScreen from './DeficitScreen';
 const lang = ( window.dsCalcData?.locale === 'fr' ) ? 'fr' : 'en';
 export const t = getT( lang );
 
+let _debtItemId = 0;
+
 const initialState = {
   // Step 1
   debtMode:      'basic',
@@ -47,7 +49,7 @@ function reducer( state, action ) {
       if ( state.debtItems.length >= 10 ) return state;
       return {
         ...state,
-        debtItems: [ ...state.debtItems, { type: 'credit-card', amount: '' } ],
+        debtItems: [ ...state.debtItems, { id: ++_debtItemId, type: 'credit-card', amount: '' } ],
       };
 
     case 'UPDATE_DEBT_ITEM': {

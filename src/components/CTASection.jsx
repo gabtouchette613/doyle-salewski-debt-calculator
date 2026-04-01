@@ -1,4 +1,4 @@
-import { useState } from '@wordpress/element';
+import { useState, useEffect, useRef } from '@wordpress/element';
 import { getT }     from '../lib/i18n';
 import { fmtC }     from '../lib/calculator';
 
@@ -82,6 +82,40 @@ export default function CTASection({ results, lang }) {
     }
   }
 
+  const modalRef = useRef( null );
+
+  // Escape key closes modal
+  useEffect( () => {
+    if ( ! modalOpen ) return;
+    function onKey( e ) {
+      if ( e.key === 'Escape' ) setModalOpen( false );
+    }
+    document.addEventListener( 'keydown', onKey );
+    return () => document.removeEventListener( 'keydown', onKey );
+  }, [ modalOpen ] );
+
+  // Focus trap: keep Tab cycling inside modal
+  useEffect( () => {
+    if ( ! modalOpen || ! modalRef.current ) return;
+    const focusable = modalRef.current.querySelectorAll(
+      'input, select, textarea, button, [tabindex]:not([tabindex="-1"])'
+    );
+    if ( focusable.length ) focusable[ 0 ].focus();
+
+    function trapFocus( e ) {
+      if ( e.key !== 'Tab' || ! focusable.length ) return;
+      const first = focusable[ 0 ];
+      const last  = focusable[ focusable.length - 1 ];
+      if ( e.shiftKey ) {
+        if ( document.activeElement === first ) { e.preventDefault(); last.focus(); }
+      } else {
+        if ( document.activeElement === last ) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener( 'keydown', trapFocus );
+    return () => document.removeEventListener( 'keydown', trapFocus );
+  }, [ modalOpen, submitted ] );
+
   return (
     <div className="dsc-cta-wrap">
 
@@ -137,7 +171,7 @@ export default function CTASection({ results, lang }) {
         className={`dsc-modal-overlay${modalOpen ? ' dsc-modal-overlay--open' : ''}`}
         onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false); }}
       >
-        <div className="dsc-modal">
+        <div className="dsc-modal" ref={ modalRef } role="dialog" aria-modal="true">
 
           <button
             className="dsc-modal-close"

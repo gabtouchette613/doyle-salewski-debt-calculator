@@ -1,55 +1,19 @@
-import { useState } from '@wordpress/element';
 import { getT } from '../lib/i18n';
 import { fmtC } from '../lib/calculator';
+import useUnlock from '../lib/useUnlock';
 
 const GATED_IDS = new Set(['proposal']);
 
 export default function PaymentCards({ results, lang, unlocked, onUnlock }) {
   const t = getT(lang);
-
-  const [unlockEmail, setUnlockEmail] = useState('');
-  const [unlockName,  setUnlockName]  = useState('');
-  const [unlockError, setUnlockError] = useState('');
-  const [unlocking,   setUnlocking]   = useState(false);
-  const [trap,        setTrap]        = useState('');
-
-  async function handleUnlock() {
-    if (!unlockEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(unlockEmail)) {
-      setUnlockError(t('pay-unlock-email-error'));
-      return;
-    }
-    setUnlockError('');
-    setUnlocking(true);
-    const restUrl   = window.dsCalcData?.restUrl   ?? '';
-    const restNonce = window.dsCalcData?.restNonce ?? '';
-    const proposal  = results.options.find(o => o.id === 'proposal');
-    try {
-      await fetch(`${restUrl}lead`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': restNonce },
-        body: JSON.stringify({
-          name:                unlockName,
-          email:               unlockEmail,
-          phone:               '',
-          call_time:           'morning',
-          website:             trap,
-          debt:                results.debt,
-          income:              results.income,
-          expenses:            results.expenses,
-          province:            results.province,
-          surplus:             results.surplus,
-          dti:                 results.dti,
-          annual_rate:         results.annualRate,
-          is_advanced:         results.isAdvancedRate,
-          recommended_payment: proposal?.payment ?? 0,
-          recommended_total:   proposal?.total   ?? 0,
-          lang,
-        }),
-      });
-    } catch (_) {}
-    setUnlocking(false);
-    onUnlock();
-  }
+  const {
+    unlockName, setUnlockName,
+    unlockEmail, setUnlockEmail,
+    unlockError, setUnlockError,
+    unlocking,
+    trap, setTrap,
+    handleUnlock,
+  } = useUnlock( results, lang, onUnlock );
 
   const DISPLAY_ORDER = ['proposal', 'dmp', 'consolidation', 'nothing'];
   const cards = DISPLAY_ORDER

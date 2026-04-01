@@ -3,7 +3,7 @@
  * Plugin Name:       Doyle Salewski Debt Relief Calculator
  * Plugin URI:        https://doylesalewski.ca
  * Description:       Interactive Canadian debt relief calculator with bilingual support and lead capture.
- * Version:           1.0.31
+ * Version:           1.0.32
  * Author:            Doyle Salewski LIT
  * Author URI:        https://doylesalewski.ca
  * License:           GPL v2 or later
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DS_CALC_VERSION', '1.0.31' );
+define( 'DS_CALC_VERSION', '1.0.32' );
 define( 'DS_CALC_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DS_CALC_URL', plugin_dir_url( __FILE__ ) );
 
@@ -38,7 +38,11 @@ function ds_calc_shortcode() {
 				true
 			);
 
-			wp_localize_script( 'ds-debt-calc', 'dsCalcData', [
+			// Use wp_add_inline_script instead of wp_localize_script so that
+			// numeric types are preserved. wp_localize_script casts every value
+			// to a string, which causes JS `1 + "0.055"` to concatenate to
+			// "10.055" instead of adding to 1.055 — corrupting the DMP total.
+			wp_add_inline_script( 'ds-debt-calc', 'var dsCalcData = ' . wp_json_encode( [
 				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 				'nonce'        => wp_create_nonce( 'ds_calc_lead' ),
 				'restUrl'      => rest_url( 'ds-calc/v1/' ),
@@ -65,7 +69,7 @@ function ds_calc_shortcode() {
 				'ratePayday'     => (float) get_option( 'ds_calc_rate_payday',      0.2999 ),
 				'ratePersonal'   => (float) get_option( 'ds_calc_rate_personal',    0.1499 ),
 				'rateOther'      => (float) get_option( 'ds_calc_rate_other',       0.1999 ),
-			] );
+			] ) . ';', 'before' );
 
 			wp_enqueue_style( 'ds-debt-calc', DS_CALC_URL . 'build/index.css', [], $asset['version'] );
 		}
