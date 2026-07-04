@@ -1,0 +1,79 @@
+name: marketing-etl
+
+on:
+  schedule:
+    # Daily at 09:00 UTC (~04:00-05:00 Toronto) — after both platforms have
+    # materialized yesterday's stats. Actions cron can start a few minutes late.
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Backfill start date (YYYY-MM-DD, leave empty for rolling window)"
+        required: false
+      end_date:
+        description: "Backfill end date (YYYY-MM-DD)"
+        required: false
+      platform:
+        description: "Platform to sync"
+        type: choice
+        options: [all, google_ads, meta]
+        default: all
+      client_id:
+        description: "Limit to one client_id (empty = all)"
+        required: false
+
+concurrency:
+  group: marketing-etl
+  cancel-in-progress: false
+
+jobs:
+  etl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: marketing-connector
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: pip install .
+
+      - name: Run tests
+        run: |
+          pip install pytest
+          python -m pytest
+
+      - name: Write GCP service account key
+        env:
+          GCP_SERVICE_ACCOUNT_JSON: ${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}
+        run: printf '%s' "$GCP_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/gcp.json"
+
+      - name: Run ETL
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcp.json
+          BQ_PROJECT_ID: ${{ secrets.BQ_PROJECT_ID }}
+          BQ_LOCATION: ${{ vars.BQ_LOCATION || 'US' }}
+          GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
+          GOOGLE_ADS_CLIENT_ID: ${{ secrets.GOOGLE_ADS_CLIENT_ID }}
+          GOOGLE_ADS_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}
+          GOOGLE_ADS_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_REFRESH_TOKEN }}
+          GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}
+          META_APP_ID: ${{ secrets.META_APP_ID }}
+          META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+        run: |
+          ARGS="--platform ${{ inputs.platform || 'all' }}"
+          if [ -n "${{ inputs.start_date }}" ]; then
+            ARGS="$ARGS --start ${{ inputs.start_date }} --end ${{ inputs.end_date }}"
+          fi
+          if [ -n "${{ inputs.client_id }}" ]; then
+            ARGS="$ARGS --client ${{ inputs.client_id }}"
+          fi
+          echo "running: python -m pipeline.jobs.run_daily $ARGS"
+          python -m pipeline.jobs.run_daily $ARGS

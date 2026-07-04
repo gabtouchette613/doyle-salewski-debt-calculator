@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marketing-connector"
+version = "0.1.0"
+description = "Read-only Google Ads + Meta Ads reporting ETL into BigQuery"
+requires-python = ">=3.11"
+dependencies = [
+    "google-ads>=25.1.0",
+    "facebook-business>=20.0.0",
+    "google-cloud-bigquery>=3.20.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+include = ["pipeline*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
